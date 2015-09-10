@@ -162,14 +162,11 @@
         </section>
         <section title="Cache Map">
             <t>
-                When a resource is stored on an oob cache, the origin server location URL of the resource will be mapped
-                to a oob cache location URL. The mapping, together with other information (e.g. content type) will be
-                stored in a "cache map". The cache map will be created by the origin server and will be delivered
-                to the client.
-
-                The cache map may include indications of out-of-band delivery of several resources including the one requested. How many objects that are in the cache map is referred to a the "depth" of the cache map.
-
-                A cache map will typically be changed during the course of a browsing session unless it reflects all content on the cache.
+                When the origin server places an object on an oob-cache it will create a map between
+                the origin object URL and the cached object URL. An out-of-bands response to the
+                user agent can contain all or a subset of the maps stored by the origin server. The
+                list of maps also contain meta data about each item, e.g. content-type and
+                encryption information.
             </t>
             <figure>
                 <artwork align="left" alt="" height="" name="" type="" width="" xml:space="preserve"><![CDATA[
