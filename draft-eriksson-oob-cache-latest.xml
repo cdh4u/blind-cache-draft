@@ -7,8 +7,8 @@
 <rfc ipr="trust200902" category="std" docName="draft-eriksson-oob-cache-00.txt" submissionType="IETF" xml:lang="en">
   <front>
     <title>
-		Delivering content via Out-Of-Band Cache
-	</title>
+        Delivering content via Out-Of-Band Cache
+    </title>
     <author fullname="Goran AP Eriksson" initials="G.E." surname="Eriksson">
       <organization>Ericsson</organization>
       <address>
@@ -20,7 +20,7 @@
         </postal>
         <email>goran.ap.eriksson@ericsson.com</email>
       </address>
-    </author>    
+    </author>
     <author fullname="Christer Holmberg" initials="C.H." surname="Holmberg">
         <organization abbrev="Ericsson">Ericsson</organization>
         <address>
@@ -34,12 +34,12 @@
             <phone></phone>
             <email>christer.holmberg@ericsson.com</email>
         </address>
-    </author>     	
+    </author>
 
     <date year="2015" />
     <area>RAI</area>
     <abstract>
-		<t>
+        <t>
             This document describes a framework for delivering protected HTTP payload from an origin to a client via an out-of-band cache (oob cache).
         </t>
         <t>
@@ -57,15 +57,15 @@
 
 <middle>
     <section title="Introduction">
-		<t>
+        <t>
             When content providers provide services to user, they need to consider user security and privacy. As the Internet traffic is transitioning towards TLS [ref],
             content that could previously be cached in inline caches will need to be managed by the origin servers of the content providers.
         </t>
         <t>
-            However, for cost and/or delivery time efficiency, there are situations where it still makes sense for a content provider to 
+            However, for cost and/or delivery time efficiency, there are situations where it still makes sense for a content provider to
             deliver resources from the origin to a cache, from where clients will fetch the resources.
         </t>
-		<t>
+        <t>
             This document describes a framework for delivering protected HTTP payload from an origin to a client via an out-of-band cache (oob cache).
         </t>
         <t>
@@ -80,18 +80,18 @@
         </t>
     </section>
 
-	<section title="Abbreviations" toc="default">
-		<t>
-            TBD		
+    <section title="Abbreviations" toc="default">
+        <t>
+            TBD
         </t>
-	</section>
-		
+    </section>
+
     <section title="Conventions">
-		<t>
-			The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
-			"SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
-			document are to be interpreted as described in <xref target="RFC2119"></xref>.
-		</t>
+        <t>
+            The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+            "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+            document are to be interpreted as described in <xref target="RFC2119"></xref>.
+        </t>
     </section>
 
     <section title="Principles and Concepts" anchor="sec-prin-conc">
@@ -99,9 +99,9 @@
             <t>
                 When an origin server administrator decides to deliver resources via an oob cache,
                 the resource information exposed to the oob cache should be minimized, especially
-                if the oob cache is owned by a 3rd party or on a 3rd part cloud infrastructure. 
-                Mechanisms that can be used for this purpose are e.g. HTTP payload encryption [ref], payload integrity protection [ref] 
-                and OOB [ref].                
+                if the oob cache is owned by a 3rd party or on a 3rd part cloud infrastructure.
+                Mechanisms that can be used for this purpose are e.g. HTTP payload encryption [ref], payload integrity protection [ref]
+                and OOB [ref].
             </t>
             <t>
                 The decision which resources are delivered to a user via an oob cache might e.g. be done
@@ -115,13 +115,13 @@
         </section>
         <section title="Architecture">
             <t>
-                The framework assumes a triangular architecture, where the client, origin server and the 
-                oob cache all interact with each other, and that sensitive and critical information sent 
-				between the entities is secured using TLS or a corresponding secure transport.
+                The framework assumes a triangular architecture, where the client, origin server and the
+                oob cache all interact with each other, and that sensitive and critical information sent
+                between the entities is secured using TLS or a corresponding secure transport.
             </t>
             <t>
-                The architecture also assumes that the resources delivered out-of-band via the oob cache from the origin server to the 
-				client is protected using an HTTP content encryption/protection information associated with the resources, are delivered 
+                The architecture also assumes that the resources delivered out-of-band via the oob cache from the origin server to the
+                client is protected using an HTTP content encryption/protection information associated with the resources, are delivered
                 to the client on the secure client-origin connection.
             </t>
             <figure>
@@ -143,7 +143,7 @@
                |   Cache  |
                |          |
                +----------+
-	
+
                 ]]></artwork>
             </figure>
         </section>
@@ -195,20 +195,20 @@
 
                 It is left to the origin server developer to decide which design that is more suitable for their respective needs.
 
-                Further details of the cache map are described in [ref].           
+                Further details of the cache map are described in [ref].
             </t>
         </section>
         <section title="Object Dependency Graph">
             <t>
                 An object dependency graph describes relationships between objects including dependencies, probable sequence of browsing through a web site. An instance if the cache map is typically created using a object dependency graph as input to a process creating a cache map with a suitable depth. This description of this process is outside this document.
             </t>
-        </section>        
-	</section>
-        
-	<section title="Procedures">
+        </section>
+    </section>
+
+    <section title="Procedures">
         <section title="General">
             <t>
-                This section describes the procedures that can take place between the origin server and the oob cache, 
+                This section describes the procedures that can take place between the origin server and the oob cache,
                 between the origin server and the client, and between the client and the oob cache.
             </t>
         </section>
@@ -237,14 +237,14 @@
                 <t>
                     The following steps take place:
                     <list style="symbols">
-                    	<t> The client send a request for the resource to the origin server appending a LINK header with information about the type of error.
-                    	</t>
-                    	<t> In case of a "server unreachable", the origin server responds with the resource. The origin server MAY provide an updated cache map in the response to the client. In case of "object not found" and the origin server has a priori knowledge of the reason being that it has deleted the object, the origin server reponds with the resource. It MAY provide an updated cache map.
-                    	</t>
-                    	<t> The origin server may have decided that the cache no longer should be used. In that case, the origin server reponds with the resource and an empty cache map. TODO: How is this expressed.
-                    	</t>
-                    	<t> The client updates the cache map. In case of an empty cache map, the client MUST consider the oob delivery to be invalidated henceforth. The client SHOULD include the BC header in future requests for resources from the origin server.
-                    	</t>
+                        <t> The client send a request for the resource to the origin server appending a LINK header with information about the type of error.
+                        </t>
+                        <t> In case of a "server unreachable", the origin server responds with the resource. The origin server MAY provide an updated cache map in the response to the client. In case of "object not found" and the origin server has a priori knowledge of the reason being that it has deleted the object, the origin server reponds with the resource. It MAY provide an updated cache map.
+                        </t>
+                        <t> The origin server may have decided that the cache no longer should be used. In that case, the origin server reponds with the resource and an empty cache map. TODO: How is this expressed.
+                        </t>
+                        <t> The client updates the cache map. In case of an empty cache map, the client MUST consider the oob delivery to be invalidated henceforth. The client SHOULD include the BC header in future requests for resources from the origin server.
+                        </t>
                     </list>
                 </t>
             </section>
@@ -260,10 +260,10 @@
         <section title="Origin-OOB Cache Procedures">
             <section title="Registration">
                 <t>
-                    In this case the client has informed the origin server about the presence of an oob cache in a suitable network location along with willingness to accept OOB, 
+                    In this case the client has informed the origin server about the presence of an oob cache in a suitable network location along with willingness to accept OOB,
                     and the origin server decides to deliver resources to the client via the oob cache. The following procedure describes
                     how the origin server registers itself with the oob cache, and exchanges the necessary information needed for the out-of-band
-                    delivery of the resources.            
+                    delivery of the resources.
                 </t>
                 <t>
                     The following steps take place:
@@ -287,42 +287,44 @@
                         <t>The origin server pushes the resource to the oob cache, using the connection established during the Registration procedure.
                         The origin server also indicates the desired max expire time associated with the resource, and the selected location URL that the
                         client shall use when requesting the resource from the oob cache.</t>
-                        <t>The oob cache sends a response, and indicates successful storage of the resource. The oob cache also indicates the selected max expiry time 
+                        <t>The oob cache sends a response, and indicates successful storage of the resource. The oob cache also indicates the selected max expiry time
                         (equal or less than the time requested by the origin server).</t>
-                        <t>The origin server sends a response to the client. The response contains a "cache map" [ref]. For any given resource, the cache map 
+                        <t>The origin server sends a response to the client. The response contains a "cache map" [ref]. For any given resource, the cache map
                         contains the origin server location URL, the oob cache location URL, and additional information (e.g. max expire time, client oob cache
-                        directives, content information, integrity information).</t>                    
+                        directives, content information, integrity information).</t>
                     </list>
                 </t>
             </section>
             <section title="Re-Use of Cached Resource">
                 <t>
                     In this case the origin has previously pushed a resource, requested by a client to an oob cache, when a new client
-                    requests the same resource and indicates the presence of the same oob cache. The origin decides to, instead of pushing the same resource to an oob cache again, refer the new client to the 
+                    requests the same resource and indicates the presence of the same oob cache. The origin decides to, instead of pushing the same resource to an oob cache again, refer the new client to the
                     the previously cached resource.
                 </t>
-				<t>
+                <t>
                     The following steps take place:
                     <list style="symbols">
-                        <t>The origin server sends a response to the client. The response contains a "cache map" [ref]. For any given resource, the cache map 
+                        <t>The origin server sends a response to the client. The response contains a "cache map" [ref]. For any given resource, the cache map
                         contains the origin server location URL, the oob cache location URL, and additional information (e.g. max expire time, client cache
-                        directives, content information).</t>                    
+                        directives, content information).</t>
                     </list>
                 </t>
             </section>
-			
-			<section title="Replace Cached Resource">
+
+            <section title="Replace Cached Resource">
                 <t>
                     In this case the origin server replaces the content of a resource stored at a oob cache. The location URL associated with the
-					resource does not change, but content information e.g. the resource content signature may change.
+                    resource does not change, but content information e.g. the resource content signature may change.
                 </t>
                 <t>
                     The following steps take place:
                     <list style="symbols">
-                        <t>The origin server pushes the new resource content to the oob cache, indicating that the new content shall
-						replace the content previously stored.</t>
-						<t>The oob cache sends a response, and indicates that the old resource content has successfully been replaced with the 
-						new resource content.</t>
+                        <t>
+                            The origin server pushes the new resource content to the oob cache, indicating that the new content shall
+                            replace the content previously stored.</t>
+                        <t>
+                            The oob cache sends a response, and indicates that the old resource content has successfully been replaced with the
+                            new resource content.</t>
                     </list>
                 </t>
                 <t>
@@ -338,40 +340,44 @@
                 <t>
                     The following steps take place:
                     <list style="symbols">
-						<t>The origin server sends a request (using an origin-cache protocol) to the oob cache, indicating which resource
-						the origin server wants the oob cache to remove.</t>
-						<t>The oob cache sends a response, indicating that the resource was successfully removed from the oob cache.</t>
+                        <t>
+                            The origin server sends a request (using an origin-cache protocol) to the oob cache, indicating which resource
+                            the origin server wants the oob cache to remove.</t>
+                        <t>
+                            The oob cache sends a response, indicating that the resource was successfully removed from the oob cache.</t>
                     </list>
                 </t>
             </section>
 
             <section title="Invalidating OOB cache">
-            	<t>
-            		In this case, the origin server has decided to not use an oob cache any more and want to invalidate oob deliveries to it for all clients using it. The origin server is assumed to maintain a list of clients served by a particular cache.
-            	</t>
-            	<t>
-            	<list style="symbols">
-            		<t> The origin server de-registers from the cache.</t>
-            		<t> When a client contacts the origin server, the origin server responds with an empty cache map.</t>
-            		<t> Upon receiption of an empty cache map, the client MUST consider the oob delivery invalidated.</t>
-            	</list>
-            </t>
-            </section>
-			
-			<section title="Removal of single Cached Resource (OOB Cache)">
                 <t>
-					In this case the oob cache decides to remove a stored resource before the expire time associated with
-					the resource has been reached.
-				</t>
+                    In this case, the origin server has decided to not use an oob cache any more and want to invalidate oob deliveries to it for all clients using it. The origin server is assumed to maintain a list of clients served by a particular cache.
+                </t>
                 <t>
-                    The following steps take place:
                     <list style="symbols">
-						<t>The oob cache sends a request to the origin server, indicating that the oob cache has removed
-						a previously stored resource.</t>
+                        <t> The origin server de-registers from the cache.</t>
+                        <t> When a client contacts the origin server, the origin server responds with an empty cache map.</t>
+                        <t> Upon receiption of an empty cache map, the client MUST consider the oob delivery invalidated.</t>
                     </list>
                 </t>
             </section>
-			
+
+            <section title="Removal of single Cached Resource (OOB Cache)">
+                <t>
+                    In this case the oob cache decides to remove a stored resource before the expire time associated with
+                    the resource has been reached.
+                </t>
+                <t>
+                    The following steps take place:
+                    <list style="symbols">
+                        <t>
+                            The oob cache sends a request to the origin server, indicating that the oob cache has removed
+                            a previously stored resource.
+                        </t>
+                    </list>
+                </t>
+            </section>
+
             <section title="De-Registration">
                 <t>
                     In this case the origin server de-registers with an oob cache with whom it has previously registered.
@@ -392,7 +398,7 @@
                 </t>
             </section>
         </section>
-    
+
         <section title="Client-OOB Cache Procedures">
             <section title="Request Resource from OOB Cache">
                 <t>
@@ -415,7 +421,7 @@
             </section>
             <section title="OOB Cache Not Reachable">
                 <t>
-                    In this case the client is, based on information in the cache map, trying to retrieve a resource from the oob cache, 
+                    In this case the client is, based on information in the cache map, trying to retrieve a resource from the oob cache,
                     but either receives a response (e.g. 404 Not Found) indicating that the oob cache cannot be reached, or receives
                     a response indicating that the resource is not available on the oob cache.
                 </t>
@@ -439,15 +445,15 @@
                 NOT READY
             </t>
             <t>
-                The client cache will contain two entries: one for the response from the origin and one for 
-                the response from the cache. The "oob control" and "ma"- parameter in the cache map controls 
-                the redirection from the origin to a cache. The redirection applies when the client receives 
+                The client cache will contain two entries: one for the response from the origin and one for
+                the response from the cache. The "oob control" and "ma"- parameter in the cache map controls
+                the redirection from the origin to a cache. The redirection applies when the client receives
                 the "ma" parameter in the map in the response and for as long as the ma parameter stipulates.
                 The "oob control" can have two values; "private" and "no_cache" and both can be present. The "private" usage is described below. If "no_cache" is present for a resource, the client MUST perform an eTag pre-flight to the origin.
             </t>
             <t>
-                The ma parameter has a global relevance, meaning it has precedence over client cache control 
-                directives for the cache response entry. 
+                The ma parameter has a global relevance, meaning it has precedence over client cache control
+                directives for the cache response entry.
             </t>
         </section>
         <section title="Private OOB Cache">
@@ -455,7 +461,7 @@
                 NOT READY
             </t>
             <t>
-                The oob cache can be either shared or private. The origin server controls the 
+                The oob cache can be either shared or private. The origin server controls the
                 behaviour of the client by adding a "private directive" in the cache map associated
                 with the resource. Additionaly, the origin server can restrict who can read the data using the content encryption key. How this is done in the origin server is not in scope of this document.
             </t>
@@ -469,61 +475,61 @@
                 NOT READY
             </t>
             <t>
-                The oob cache might control the client cache handling of a resource, using the HTTP 
+                The oob cache might control the client cache handling of a resource, using the HTTP
                 directives (e.g. no-cache, max-age).
             </t>
             <t>
-                A no-cache directive MUST be treated such by the client that a pre-flight e-tag check is done towards the cache. 
-                A max-age directive MUST be treated as specified in RFC H2 or whatever TODO: reference for client cache control 
-                behavior. No-store MUST be interpreted to mean do not cache the cache response. 
+                A no-cache directive MUST be treated such by the client that a pre-flight e-tag check is done towards the cache.
+                A max-age directive MUST be treated as specified in RFC H2 or whatever TODO: reference for client cache control
+                behavior. No-store MUST be interpreted to mean do not cache the cache response.
             </t>
         </section>
     </section>
-    
-	<section title="Security Considerations">
-		<t>
-			A lot of TODO's.
-		</t>
-		<section title="Guidelines">
-			<t>
-			<list style="symbols">
-				<t> The oob cache resource identity SHOULD be a pseudo-random string</t>
-				<t> The origin server SHOULD use random padding of content delivered oob.</t>
-			</list>
-		</t>
-		</section>
-		<section title="Threats">
-			<t> In case of a group key and the client group is open, an oob cache may act as a client and obtain the key. Measures for disabling the cache to act as a client MUST be taken to avoid the cache not know the origin server such as having an "anonymization" function in between a cache and an origin. TODO: Outline such a function between the origin server and oob cache.
-			</t>
-			<t> If the client group is restricted with strong client authentication towards the origin (closed) or groups with single clients or single requests, then a cache cannot act as a client towards the origin server.
-			</t>
-			<t> If the cache is individual (private), the cache can still see the user downloaded the same file at different times and/or at different locations.
-			</t>
-			<t> If the cache is shared between several clients, the cache can see that the users downloaded the same file.
-			</t>
-		</section>
-	</section>
-	
-	<section title="IANA Considerations">
-		<t>
-            TBD		
+
+    <section title="Security Considerations">
+        <t>
+            A lot of TODO's.
         </t>
-	</section>
-                   
-	<section title="Acknowledgements">
-		<t>
+        <section title="Guidelines">
+            <t>
+            <list style="symbols">
+                <t> The oob cache resource identity SHOULD be a pseudo-random string</t>
+                <t> The origin server SHOULD use random padding of content delivered oob.</t>
+            </list>
+        </t>
+        </section>
+        <section title="Threats">
+            <t> In case of a group key and the client group is open, an oob cache may act as a client and obtain the key. Measures for disabling the cache to act as a client MUST be taken to avoid the cache not know the origin server such as having an "anonymization" function in between a cache and an origin. TODO: Outline such a function between the origin server and oob cache.
+            </t>
+            <t> If the client group is restricted with strong client authentication towards the origin (closed) or groups with single clients or single requests, then a cache cannot act as a client towards the origin server.
+            </t>
+            <t> If the cache is individual (private), the cache can still see the user downloaded the same file at different times and/or at different locations.
+            </t>
+            <t> If the cache is shared between several clients, the cache can see that the users downloaded the same file.
+            </t>
+        </section>
+    </section>
+
+    <section title="IANA Considerations">
+        <t>
             TBD
         </t>
-	</section>
-		
-	<section title="Change Log">	
-		<t>[RFC EDITOR NOTE: Please remove this section when publishing]</t>
-	</section>
+    </section>
+
+    <section title="Acknowledgements">
+        <t>
+            TBD
+        </t>
+    </section>
+
+    <section title="Change Log">
+        <t>[RFC EDITOR NOTE: Please remove this section when publishing]</t>
+    </section>
 </middle>
 
 <back>
     <references title="Normative References">
-		<?rfc include="reference.RFC.2119"?>
+        <?rfc include="reference.RFC.2119"?>
         <?rfc include="reference.RFC.5234"?>
     </references>
 </back>

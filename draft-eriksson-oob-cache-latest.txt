@@ -1,0 +1,784 @@
+
+
+
+
+Network Working Group                                        G. Eriksson
+Internet-Draft                                               C. Holmberg
+Intended status: Standards Track                                Ericsson
+Expires: March 13, 2016                               September 10, 2015
+
+
+                Delivering content via Out-Of-Band Cache
+                    draft-eriksson-oob-cache-00.txt
+
+Abstract
+
+   This document describes a framework for delivering protected HTTP
+   payload from an origin to a client via an out-of-band cache (oob
+   cache).
+
+   The framework also describes how individual mechanisms, such as
+   payload encryption, out-of-band content delivery, and content
+   integrity could be leveraged.
+
+   The framework assumes that the web administrator of the origin has
+   control of how much content information is exposed to the oob cache,
+   depending on e.g. whether the oob cache is hosted by a third party,
+   or the risk of a third party getting access to the information stored
+   at the oob cache.
+
+   The oob cache might be reachable from the origin server, or it might
+   be deployed behind a NAT.  Both options are considered in the
+   document.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at http://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on March 13, 2016.
+
+Copyright Notice
+
+
+
+
+Eriksson & Holmberg      Expires March 13, 2016                 [Page 1]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+
+
+   Copyright (c) 2015 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (http://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Simplified BSD License text as described in Section 4.e of
+   the Trust Legal Provisions and are provided without warranty as
+   described in the Simplified BSD License.
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
+   2.  Abbreviations . . . . . . . . . . . . . . . . . . . . . . . .   3
+   3.  Conventions . . . . . . . . . . . . . . . . . . . . . . . . .   3
+   4.  Principles and Concepts . . . . . . . . . . . . . . . . . . .   4
+     4.1.  General . . . . . . . . . . . . . . . . . . . . . . . . .   4
+     4.2.  Architecture  . . . . . . . . . . . . . . . . . . . . . .   4
+     4.3.  OOB Cache Discovery . . . . . . . . . . . . . . . . . . .   5
+     4.4.  Cache Map . . . . . . . . . . . . . . . . . . . . . . . .   5
+     4.5.  Object Dependency Graph . . . . . . . . . . . . . . . . .   6
+   5.  Procedures  . . . . . . . . . . . . . . . . . . . . . . . . .   6
+     5.1.  General . . . . . . . . . . . . . . . . . . . . . . . . .   6
+     5.2.  Client-Origin Procedures  . . . . . . . . . . . . . . . .   6
+       5.2.1.  Initial request . . . . . . . . . . . . . . . . . . .   6
+       5.2.2.  Cache Not Reachable . . . . . . . . . . . . . . . . .   7
+       5.2.3.  Object integrity compromised  . . . . . . . . . . . .   7
+     5.3.  Origin-OOB Cache Procedures . . . . . . . . . . . . . . .   7
+       5.3.1.  Registration  . . . . . . . . . . . . . . . . . . . .   7
+       5.3.2.  Pushing Resource on OOB Cache . . . . . . . . . . . .   8
+       5.3.3.  Re-Use of Cached Resource . . . . . . . . . . . . . .   8
+       5.3.4.  Replace Cached Resource . . . . . . . . . . . . . . .   9
+       5.3.5.  Removal of single Cached Resource (origin server) . .   9
+       5.3.6.  Invalidating OOB cache  . . . . . . . . . . . . . . .  10
+       5.3.7.  Removal of single Cached Resource (OOB Cache) . . . .  10
+       5.3.8.  De-Registration . . . . . . . . . . . . . . . . . . .  10
+     5.4.  Client-OOB Cache Procedures . . . . . . . . . . . . . . .  11
+       5.4.1.  Request Resource from OOB Cache . . . . . . . . . . .  11
+       5.4.2.  OOB Cache Not Reachable . . . . . . . . . . . . . . .  11
+   6.  Controlling the client oob and cache  . . . . . . . . . . . .  12
+     6.1.  OOB Redirection Control . . . . . . . . . . . . . . . . .  12
+     6.2.  Private OOB Cache . . . . . . . . . . . . . . . . . . . .  12
+     6.3.  Cache Response Client Cache Control . . . . . . . . . . .  12
+   7.  Security Considerations . . . . . . . . . . . . . . . . . . .  13
+     7.1.  Guidelines  . . . . . . . . . . . . . . . . . . . . . . .  13
+
+
+
+Eriksson & Holmberg      Expires March 13, 2016                 [Page 2]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+
+
+     7.2.  Threats . . . . . . . . . . . . . . . . . . . . . . . . .  13
+   8.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  13
+   9.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  13
+   10. Change Log  . . . . . . . . . . . . . . . . . . . . . . . . .  13
+   11. Normative References  . . . . . . . . . . . . . . . . . . . .  14
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  14
+
+1.  Introduction
+
+   When content providers provide services to user, they need to
+   consider user security and privacy.  As the Internet traffic is
+   transitioning towards TLS [ref], content that could previously be
+   cached in inline caches will need to be managed by the origin servers
+   of the content providers.
+
+   However, for cost and/or delivery time efficiency, there are
+   situations where it still makes sense for a content provider to
+   deliver resources from the origin to a cache, from where clients will
+   fetch the resources.
+
+   This document describes a framework for delivering protected HTTP
+   payload from an origin to a client via an out-of-band cache (oob
+   cache).
+
+   The framework also describes how individual mechanisms, such as
+   payload encryption, out-of-band content delivery, and content
+   integrity could be leveraged.  It furthermore outlines the procedures
+   that could be used by the origin server to configure the use of the
+   cache.
+
+   The framework assumes that the web administrator of the origin has
+   control of how much content information is exposed to the oob cache,
+   depending on e.g. whether the oob cache is hosted by a third party,
+   or the risk of a third party getting access to the information stored
+   at the oob cache.
+
+   The oob cache might reachable from the origin server as a HTTP
+   server, or it might be deployed behind a NAT in which case it is not
+   reachable.  Both options are considered relevant but in this version,
+   only the case where the cache is visible to the origin server is
+   described.
+
+2.  Abbreviations
+
+   TBD
+
+3.  Conventions
+
+
+
+
+Eriksson & Holmberg      Expires March 13, 2016                 [Page 3]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+   document are to be interpreted as described in [RFC2119].
+
+4.  Principles and Concepts
+
+4.1.  General
+
+   When an origin server administrator decides to deliver resources via
+   an oob cache, the resource information exposed to the oob cache
+   should be minimized, especially if the oob cache is owned by a 3rd
+   party or on a 3rd part cloud infrastructure.  Mechanisms that can be
+   used for this purpose are e.g. HTTP payload encryption [ref], payload
+   integrity protection [ref] and OOB [ref].
+
+   The decision which resources are delivered to a user via an oob cache
+   might e.g. be done based on static configuration, or dynamically
+   based on information from an analytics tool.  [ref] describes the
+   Object Dependency Graph, an information model of how a web sites
+   objects are consumed by a user and used to decide opportunistically
+   what to make available in a client or a cache before the an explicit
+   request for the object(s) has been made.
+
+   NOTE: The mechanism for deciding which resources will be delivered
+   via an oob cache is outside the scope of this document.
+
+4.2.  Architecture
+
+   The framework assumes a triangular architecture, where the client,
+   origin server and the oob cache all interact with each other, and
+   that sensitive and critical information sent between the entities is
+   secured using TLS or a corresponding secure transport.
+
+   The architecture also assumes that the resources delivered out-of-
+   band via the oob cache from the origin server to the client is
+   protected using an HTTP content encryption/protection information
+   associated with the resources, are delivered to the client on the
+   secure client-origin connection.
+
+
+       +---------+            +----------+
+       |         |    HTTPS   |          |
+       |  Client |------------|  Origin  |
+       |         |            |          |
+       +---------+            +----------+
+              \                  /
+               \                /
+                \  HTTP(S)     /
+
+
+
+Eriksson & Holmberg      Expires March 13, 2016                 [Page 4]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+
+
+                 \            /  HTTPS
+                  \          /
+                   \        /
+                  +----------+
+                  |    OOB   |
+                  |   Cache  |
+                  |          |
+                  +----------+
+
+
+4.3.  OOB Cache Discovery
+
+   A client can use different mechanisms in order to discover the
+   presence of available local oob caches.  The discovery mechanism MUST
+   be secure in the sense that the client is assumed to assert the
+   identity of the oob cache.
+
+   TODO: look into mDNS based based discovery.
+
+   NOTE: This document assumes that the client performs the oob cache
+   discovery.  Origin discovery of oob caches is outside the scope.
+
+4.4.  Cache Map
+
+   When a resource is stored on an oob cache, the origin server location
+   URL of the resource will be mapped to a oob cache location URL.  The
+   mapping, together with other information (e.g. content type) will be
+   stored in a "cache map".  The cache map will be created by the origin
+   server and will be delivered to the client.  The cache map may
+   include indications of out-of-band delivery of several resources
+   including the one requested.  How many objects that are in the cache
+   map is referred to a the "depth" of the cache map.  A cache map will
+   typically be changed during the course of a browsing session unless
+   it reflects all content on the cache.
+
+
+   +----------------------------------------------------------------------+
+   | Origin server location | OOB Cache location        |   Parameters    |
+   |----------------------------------------------------------------------|
+   | example.com/ex_jsl.js  | cache.ex1.com/lxUrP/75991 | 'content-type'  |
+   |                        |                           | 'oob-control'   |
+   |                        |                           | 'max-age'       |
+   |                        |                           | 'encryption-key'|
+   | -----------------------|---------------------------|-----------------|
+   | example.com/style.css  | cache.ex1.com/lxUrP/74113 | 'content-type'  |
+   |                        |                           |       ...       |
+   | -----------------------|---------------------------|-----------------|
+   | example.com/mustang.jpg| cache.ex1.cm/lxUrP/56333  |       ...       |
+
+
+
+Eriksson & Holmberg      Expires March 13, 2016                 [Page 5]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+
+
+   +----------------------------------------------------------------------+
+
+
+   An origin server may be designed such that it keeps track of
+   individual clients cache map, which implies managing large amounts of
+   states.  Another design with lesser states is an origin server that
+   does not keep track on the status of individual clients cache map.
+   Instead, each time the client requests a resource from the origin
+   server, a new cache map is created and included in the response to
+   the client.  It is left to the origin server developer to decide
+   which design that is more suitable for their respective needs.
+   Further details of the cache map are described in [ref].
+
+4.5.  Object Dependency Graph
+
+   An object dependency graph describes relationships between objects
+   including dependencies, probable sequence of browsing through a web
+   site.  An instance if the cache map is typically created using a
+   object dependency graph as input to a process creating a cache map
+   with a suitable depth.  This description of this process is outside
+   this document.
+
+5.  Procedures
+
+5.1.  General
+
+   This section describes the procedures that can take place between the
+   origin server and the oob cache, between the origin server and the
+   client, and between the client and the oob cache.
+
+5.2.  Client-Origin Procedures
+
+5.2.1.  Initial request
+
+   In this use case a client has discovered the presence of a oob cache.
+
+   The following steps take place:
+
+   o  The client establishes a secure TLS connection to the origin
+      server.
+
+   o  The client requests the resource appending information about the
+      presence of a oob cache.
+
+   o  The origin server decides to use the oob cache for the requested
+      object.  It may also decide to refer the delivery for other
+      objects than the one requested.
+
+
+
+
+Eriksson & Holmberg      Expires March 13, 2016                 [Page 6]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+
+
+   o  The origin server configures the oob cache and responds to the
+      client with a cache map.
+
+   TBD: The above is applicable if the cache is reachable for the origin
+   server.  The case when the oob cache is behind a NAT is TBD.
+
+5.2.2.  Cache Not Reachable
+
+   This case starts with the client receiving an network error when
+   requesting an object from the oob cache.  This procedure uses the oob
+   [ref] error handling.
+
+   The following steps take place:
+
+   o  The client send a request for the resource to the origin server
+      appending a LINK header with information about the type of error.
+
+   o  In case of a "server unreachable", the origin server responds with
+      the resource.  The origin server MAY provide an updated cache map
+      in the response to the client.  In case of "object not found" and
+      the origin server has a priori knowledge of the reason being that
+      it has deleted the object, the origin server reponds with the
+      resource.  It MAY provide an updated cache map.
+
+   o  The origin server may have decided that the cache no longer should
+      be used.  In that case, the origin server reponds with the
+      resource and an empty cache map.  TODO: How is this expressed.
+
+   o  The client updates the cache map.  In case of an empty cache map,
+      the client MUST consider the oob delivery to be invalidated
+      henceforth.  The client SHOULD include the BC header in future
+      requests for resources from the origin server.
+
+5.2.3.  Object integrity compromised
+
+   This case starts with the client detecting that the integrity of the
+   object retrieved from an oob cache has been compromised.
+
+   TBD.
+
+5.3.  Origin-OOB Cache Procedures
+
+5.3.1.  Registration
+
+   In this case the client has informed the origin server about the
+   presence of an oob cache in a suitable network location along with
+   willingness to accept OOB, and the origin server decides to deliver
+   resources to the client via the oob cache.  The following procedure
+
+
+
+Eriksson & Holmberg      Expires March 13, 2016                 [Page 7]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+
+
+   describes how the origin server registers itself with the oob cache,
+   and exchanges the necessary information needed for the out-of-band
+   delivery of the resources.
+
+   The following steps take place:
+
+   o  The origin server establishes a secure TLS connection with the oob
+      cache, using the location information of the oob cache received
+      from the client.
+
+   o  The origin server sends a register request (using a origin-cache
+      protocol) to the oob cache.
+
+   o  The oob cache accepts the registration, and sends a response which
+      contains available storage quota.
+
+   TBD: The origin should be authenticated by the oob cache.  The
+   mechanism for this is TBD.  How to assert a 'secure' TLS connection
+   is TBD.
+
+5.3.2.  Pushing Resource on OOB Cache
+
+   In this case the origin has decided that it will deliver a resource
+   requested by the client via the oob cache.
+
+   The following steps take place:
+
+   o  The origin server pushes the resource to the oob cache, using the
+      connection established during the Registration procedure.  The
+      origin server also indicates the desired max expire time
+      associated with the resource, and the selected location URL that
+      the client shall use when requesting the resource from the oob
+      cache.
+
+   o  The oob cache sends a response, and indicates successful storage
+      of the resource.  The oob cache also indicates the selected max
+      expiry time (equal or less than the time requested by the origin
+      server).
+
+   o  The origin server sends a response to the client.  The response
+      contains a "cache map" [ref].  For any given resource, the cache
+      map contains the origin server location URL, the oob cache
+      location URL, and additional information (e.g. max expire time,
+      client oob cache directives, content information, integrity
+      information).
+
+5.3.3.  Re-Use of Cached Resource
+
+
+
+
+Eriksson & Holmberg      Expires March 13, 2016                 [Page 8]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+
+
+   In this case the origin has previously pushed a resource, requested
+   by a client to an oob cache, when a new client requests the same
+   resource and indicates the presence of the same oob cache.  The
+   origin decides to, instead of pushing the same resource to an oob
+   cache again, refer the new client to the the previously cached
+   resource.
+
+   The following steps take place:
+
+   o  The origin server sends a response to the client.  The response
+      contains a "cache map" [ref].  For any given resource, the cache
+      map contains the origin server location URL, the oob cache
+      location URL, and additional information (e.g. max expire time,
+      client cache directives, content information).
+
+5.3.4.  Replace Cached Resource
+
+   In this case the origin server replaces the content of a resource
+   stored at a oob cache.  The location URL associated with the resource
+   does not change, but content information e.g. the resource content
+   signature may change.
+
+   The following steps take place:
+
+   o  The origin server pushes the new resource content to the oob
+      cache, indicating that the new content shall replace the content
+      previously stored.
+
+   o  The oob cache sends a response, and indicates that the old
+      resource content has successfully been replaced with the new
+      resource content.
+
+   The origin server should use no_cache or no_store directive to the
+   client cache for objects whose content may be replaced making the
+   client check with the origin server before retrieving the content
+   from the oob cache.
+
+5.3.5.  Removal of single Cached Resource (origin server)
+
+   In this case the origin server requests the oob cache to remove a
+   resource that the origin server has previously pushed to the cache,
+   and for which the expire time has yet not been reached.
+
+   The following steps take place:
+
+   o  The origin server sends a request (using an origin-cache protocol)
+      to the oob cache, indicating which resource the origin server
+      wants the oob cache to remove.
+
+
+
+Eriksson & Holmberg      Expires March 13, 2016                 [Page 9]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+
+
+   o  The oob cache sends a response, indicating that the resource was
+      successfully removed from the oob cache.
+
+5.3.6.  Invalidating OOB cache
+
+   In this case, the origin server has decided to not use an oob cache
+   any more and want to invalidate oob deliveries to it for all clients
+   using it.  The origin server is assumed to maintain a list of clients
+   served by a particular cache.
+
+   o  The origin server de-registers from the cache.
+
+   o  When a client contacts the origin server, the origin server
+      responds with an empty cache map.
+
+   o  Upon receiption of an empty cache map, the client MUST consider
+      the oob delivery invalidated.
+
+5.3.7.  Removal of single Cached Resource (OOB Cache)
+
+   In this case the oob cache decides to remove a stored resource before
+   the expire time associated with the resource has been reached.
+
+   The following steps take place:
+
+   o  The oob cache sends a request to the origin server, indicating
+      that the oob cache has removed a previously stored resource.
+
+5.3.8.  De-Registration
+
+   In this case the origin server de-registers with an oob cache with
+   whom it has previously registered.
+
+   The following steps take place:
+
+   o  The origin server sends a de-register request (using an origin-
+      cache protocol) to the oob cache.
+
+   o  The oob cache sends a response, and indicates successful de-
+      registration.  The origin server MUST NOT push any further
+      resources to the oob cache (until it first registers itself with
+      the oob cache again).
+
+
+
+
+
+
+
+
+
+Eriksson & Holmberg      Expires March 13, 2016                [Page 10]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+
+
+   OPEN ISSUE: What happens to resources stored at the oob cache when
+   the origin server de-registers.  Will they remain until the max
+   expire time has been reached?  Will they be deleted?  Should the oob
+   cache refuse the de-registration as long as there are stored
+   resources?  Should the origin server be able to choose what happens
+   to stored resources when it de-registers?
+
+5.4.  Client-OOB Cache Procedures
+
+5.4.1.  Request Resource from OOB Cache
+
+   In this case the client is requesting a resource from the oob cache.
+   The client has previously received a cache map from the origin
+   server, in which there is an entry indicating that the requested
+   resource shall be retrieved from an oob cache.
+
+   The client has checked if cache directive no_cache or no_store
+   applies.  If so, it contacts the origin server to check if oob
+   delivery and associated content information is still valid.
+
+   The following steps take place:
+
+   o  The client sends a request to the oob cache in order to retrieve a
+      resource.
+
+   o  The oob cache sends a response, which contains the requested
+      resource.
+
+   o  The client combines the response from the oob cache with content
+      information from the origin server to create a response as if it
+      came from the origin server.
+
+5.4.2.  OOB Cache Not Reachable
+
+   In this case the client is, based on information in the cache map,
+   trying to retrieve a resource from the oob cache, but either receives
+   a response (e.g. 404 Not Found) indicating that the oob cache cannot
+   be reached, or receives a response indicating that the resource is
+   not available on the oob cache.
+
+   The following steps take place:
+
+   o  The client sends a request to the oob cache, in order to retrieve
+      a resource.
+
+   o  The client receives a response either indicating that the oob
+      cache cannot be reached, or indicating that the resource is not
+      available at the oob cache.
+
+
+
+Eriksson & Holmberg      Expires March 13, 2016                [Page 11]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+
+
+   o  The client interacts with the origin server, see [ref]
+
+   SOMEOTHERPLACE: The origin server may decide to deliver the resource
+   directly to the client or refer again to a oob cache.
+
+6.  Controlling the client oob and cache
+
+6.1.  OOB Redirection Control
+
+   NOT READY
+
+   The client cache will contain two entries: one for the response from
+   the origin and one for the response from the cache.  The "oob
+   control" and "ma"- parameter in the cache map controls the
+   redirection from the origin to a cache.  The redirection applies when
+   the client receives the "ma" parameter in the map in the response and
+   for as long as the ma parameter stipulates.  The "oob control" can
+   have two values; "private" and "no_cache" and both can be present.
+   The "private" usage is described below.  If "no_cache" is present for
+   a resource, the client MUST perform an eTag pre-flight to the origin.
+
+   The ma parameter has a global relevance, meaning it has precedence
+   over client cache control directives for the cache response entry.
+
+6.2.  Private OOB Cache
+
+   NOT READY
+
+   The oob cache can be either shared or private.  The origin server
+   controls the behaviour of the client by adding a "private directive"
+   in the cache map associated with the resource.  Additionaly, the
+   origin server can restrict who can read the data using the content
+   encryption key.  How this is done in the origin server is not in
+   scope of this document.
+
+   The client MUST treat a resource, marked with the private directive,
+   as private.  This means that the client MUST only provide the
+   resource to the browsing context authenticated with the origin
+   server.
+
+6.3.  Cache Response Client Cache Control
+
+   NOT READY
+
+   The oob cache might control the client cache handling of a resource,
+   using the HTTP directives (e.g. no-cache, max-age).
+
+
+
+
+
+Eriksson & Holmberg      Expires March 13, 2016                [Page 12]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+
+
+   A no-cache directive MUST be treated such by the client that a pre-
+   flight e-tag check is done towards the cache.  A max-age directive
+   MUST be treated as specified in RFC H2 or whatever TODO: reference
+   for client cache control behavior.  No-store MUST be interpreted to
+   mean do not cache the cache response.
+
+7.  Security Considerations
+
+   A lot of TODO's.
+
+7.1.  Guidelines
+
+   o  The oob cache resource identity SHOULD be a pseudo-random string
+
+   o  The origin server SHOULD use random padding of content delivered
+      oob.
+
+7.2.  Threats
+
+   In case of a group key and the client group is open, an oob cache may
+   act as a client and obtain the key.  Measures for disabling the cache
+   to act as a client MUST be taken to avoid the cache not know the
+   origin server such as having an "anonymization" function in between a
+   cache and an origin.  TODO: Outline such a function between the
+   origin server and oob cache.
+
+   If the client group is restricted with strong client authentication
+   towards the origin (closed) or groups with single clients or single
+   requests, then a cache cannot act as a client towards the origin
+   server.
+
+   If the cache is individual (private), the cache can still see the
+   user downloaded the same file at different times and/or at different
+   locations.
+
+   If the cache is shared between several clients, the cache can see
+   that the users downloaded the same file.
+
+8.  IANA Considerations
+
+   TBD
+
+9.  Acknowledgements
+
+   TBD
+
+10.  Change Log
+
+
+
+
+Eriksson & Holmberg      Expires March 13, 2016                [Page 13]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+
+
+   [RFC EDITOR NOTE: Please remove this section when publishing]
+
+11.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, DOI 10.17487/
+              RFC2119, March 1997,
+              <http://www.rfc-editor.org/info/rfc2119>.
+
+   [RFC5234]  Crocker, D., Ed. and P. Overell, "Augmented BNF for Syntax
+              Specifications: ABNF", STD 68, RFC 5234, DOI 10.17487/
+              RFC5234, January 2008,
+              <http://www.rfc-editor.org/info/rfc5234>.
+
+Authors' Addresses
+
+   Goran AP Eriksson
+   Ericsson
+   Farogatan 6
+   Stockholm  16480
+   Sweden
+
+   Email: goran.ap.eriksson@ericsson.com
+
+
+   Christer Holmberg
+   Ericsson
+   Hirsalantie 11
+   Jorvas  02420
+   Finland
+
+   Email: christer.holmberg@ericsson.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Eriksson & Holmberg      Expires March 13, 2016                [Page 14]
