@@ -63,20 +63,20 @@
         </t>
         <t>
             However, for cost and/or delivery time efficiency, there are situations where it still makes sense for a content provider to 
-            deliver resources from the origin to a cache, from where users will fetch the resources.
+            deliver resources from the origin to a cache, from where clients will fetch the resources.
         </t>
 		<t>
             This document describes a framework for delivering protected HTTP payload from an origin to a client via an out-of-band cache (oob cache).
         </t>
         <t>
-            The framework also describes how individual mechanisms, such as payload encryption, out-of-band content delivery, and content integrity could be leveraged.
+            The framework also describes how individual mechanisms, such as payload encryption, out-of-band content delivery, and content integrity could be leveraged. It furthermore outlines the procedures that could be used by the origin server to configure the use of the cache.
         </t>
         <t>
             The framework assumes that the web administrator of the origin has control of how much content information is exposed to the oob cache, depending
             on e.g. whether the oob cache is hosted by a third party, or the risk of a third party getting access to the information stored at the oob cache.
         </t>
         <t>
-            The oob cache might reachable from the origin server, or it might be deployed behind a NAT. Both options are considered in the document. TODO: deployed behind NAT.
+            The oob cache might reachable from the origin server as a HTTP server, or it might be deployed behind a NAT in which case it is not reachable. Both options are considered relevant but in this version, only the case where the cache is visible to the origin server is described.
         </t>
     </section>
 
@@ -99,8 +99,8 @@
             <t>
                 When an origin server administrator decides to deliver resources via an oob cache,
                 the resource information exposed to the oob cache should be minimized, especially
-                if the oob cache is owned by or hosted by a third party. Mechanisms that can be used for this 
-                purpose are e.g. HTTP payload encryption [ref], payload integrity protection [ref] 
+                if the oob cache is owned by a 3rd party or on a 3rd part cloud infrastructure. 
+                Mechanisms that can be used for this purpose are e.g. HTTP payload encryption [ref], payload integrity protection [ref] 
                 and OOB [ref].                
             </t>
             <t>
@@ -121,8 +121,7 @@
             </t>
             <t>
                 The architecture also assumes that the resources delivered out-of-band via the oob cache from the origin server to the 
-				client is protected using an HTTP content encryption/protection mechanism as well as integrity protection. The associated 
-				keys, object integrity information and sensitive header field information associated with the resources, are delivered 
+				client is protected using an HTTP content encryption/protection information associated with the resources, are delivered 
                 to the client on the secure client-origin connection.
             </t>
             <figure>
@@ -135,7 +134,7 @@
     +---------+            +----------+
            \                  /
             \                /
-             \  HTTPS       /
+             \  HTTP(S)     /
               \            /  HTTPS
                \          /
                 \        /
@@ -155,7 +154,7 @@
                 oob cache.
             </t>
             <t>
-                TODO: look into mDNS based.
+                TODO: look into mDNS based based discovery.
             </t>
             <t>
                 NOTE: This document assumes that the client performs the oob cache discovery. Origin discovery of oob caches is outside the scope.
@@ -165,8 +164,12 @@
             <t>
                 When a resource is stored on an oob cache, the origin server location URL of the resource will be mapped
                 to a oob cache location URL. The mapping, together with other information (e.g. content type) will be
-                stored in a "cache map". The cache map will be created by the origin server, and will be delivered
+                stored in a "cache map". The cache map will be created by the origin server and will be delivered
                 to the client.
+
+                The cache map may include indications of out-of-band delivery of several resources including the one requested. How many objects that are in the cache map is referred to a the "depth" of the cache map.
+
+                A cache map will typically be changed during the course of a browsing session unless it reflects all content on the cache.
             </t>
             <figure>
                 <artwork align="left" alt="" height="" name="" type="" width="" xml:space="preserve"><![CDATA[
@@ -175,7 +178,7 @@
 | Origin server location | OOB Cache location        |   Parameters    |
 |----------------------------------------------------------------------|
 | example.com/ex_jsl.js  | cache.ex1.com/lxUrP/75991 | 'content-type'  |
-|                        |                           | 'cache-control' |
+|                        |                           | 'oob-control'   |
 |                        |                           | 'max-age'       |
 |                        |                           | 'encryption-key'|
 | -----------------------|---------------------------|-----------------|
@@ -188,12 +191,16 @@
                 ]]></artwork>
             </figure>
             <t>
-                The details of the cache map are described in [ref].           
+                An origin server may be designed such that it keeps track of individual clients cache map, which implies managing large amounts of states. Another design with lesser states is an origin server that does not keep track on the status of individual clients cache map. Instead, each time the client requests a resource from the origin server, a new cache map is created and included in the response to the client.
+
+                It is left to the origin server developer to decide which design that is more suitable for their respective needs.
+
+                Further details of the cache map are described in [ref].           
             </t>
         </section>
         <section title="Object Dependency Graph">
             <t>
-                TBD
+                An object dependency graph describes relationships between objects including dependencies, probable sequence of browsing through a web site. An instance if the cache map is typically created using a object dependency graph as input to a process creating a cache map with a suitable depth. This description of this process is outside this document.
             </t>
         </section>        
 	</section>
@@ -225,10 +232,20 @@
             </section>
             <section title="Cache Not Reachable">
                 <t>
-                    This case starts with the client receiving an network error when requesting an object from the oob cache.
+                    This case starts with the client receiving an network error when requesting an object from the oob cache. This procedure uses the oob [ref] error handling.
                 </t>
                 <t>
-                    TBD.
+                    The following steps take place:
+                    <list style="symbols">
+                    	<t> The client send a request for the resource to the origin server appending a LINK header with information about the type of error.
+                    	</t>
+                    	<t> In case of a "server unreachable", the origin server responds with the resource. The origin server MAY provide an updated cache map in the response to the client. In case of "object not found" and the origin server has a priori knowledge of the reason being that it has deleted the object, the origin server reponds with the resource. It MAY provide an updated cache map.
+                    	</t>
+                    	<t> The origin server may have decided that the cache no longer should be used. In that case, the origin server reponds with the resource and an empty cache map. TODO: How is this expressed.
+                    	</t>
+                    	<t> The client updates the cache map. In case of an empty cache map, the client MUST consider the oob delivery to be invalidated henceforth. The client SHOULD include the BC header in future requests for resources from the origin server.
+                    	</t>
+                    </list>
                 </t>
             </section>
             <section title="Object integrity compromised">
@@ -273,7 +290,7 @@
                         <t>The oob cache sends a response, and indicates successful storage of the resource. The oob cache also indicates the selected max expiry time 
                         (equal or less than the time requested by the origin server).</t>
                         <t>The origin server sends a response to the client. The response contains a "cache map" [ref]. For any given resource, the cache map 
-                        contains the origin server location URL, the oob cache location URL, and additional information (e.g. max expire time, client cache
+                        contains the origin server location URL, the oob cache location URL, and additional information (e.g. max expire time, client oob cache
                         directives, content information, integrity information).</t>                    
                     </list>
                 </t>
@@ -313,7 +330,7 @@
                 </t>
             </section>
 
-            <section title="Removal of Cached Resource (origin server)">
+            <section title="Removal of single Cached Resource (origin server)">
                 <t>
                     In this case the origin server requests the oob cache to remove a resource that the origin server has previously
                     pushed to the cache, and for which the expire time has yet not been reached.
@@ -327,10 +344,23 @@
                     </list>
                 </t>
             </section>
+
+            <section title="Invalidating OOB cache">
+            	<t>
+            		In this case, the origin server has decided to not use an oob cache any more and want to invalidate oob deliveries to it for all clients using it. The origin server is assumed to maintain a list of clients served by a particular cache.
+            	</t>
+            	<t>
+            	<list style="symbols">
+            		<t> The origin server de-registers from the cache.</t>
+            		<t> When a client contacts the origin server, the origin server responds with an empty cache map.</t>
+            		<t> Upon receiption of an empty cache map, the client MUST consider the oob delivery invalidated.</t>
+            	</list>
+            </t>
+            </section>
 			
-			<section title="Removal of Cached Resource (OOB Cache)">
+			<section title="Removal of single Cached Resource (OOB Cache)">
                 <t>
-					In this case the oob cached decides to remove a stored resource before the expire time associated with
+					In this case the oob cache decides to remove a stored resource before the expire time associated with
 					the resource has been reached.
 				</t>
                 <t>
@@ -395,10 +425,7 @@
                         <t>The client sends a request to the oob cache, in order to retrieve a resource.</t>
                         <t>The client receives a response either indicating that the oob cache cannot be reached, or
                         indicating that the resource is not available at the oob cache.</t>
-                        <t>The client sends a request to the origin server and requests the resource that it did not managed
-                        to retrieve from the oob cache. It uses to origin server location URL associated with the resource.</t>
-                        <t>The client indicates (using some protocol element), in the request sent to the origin server, that
-                        the oob cache could not be reached (or that the resource was not available).</t>
+                        <t>The client interacts with the origin server, see [ref]</t>
                     </list>
                 </t>
                 <t>SOMEOTHERPLACE: The origin server may decide to deliver the resource directly to the client or refer again to a oob cache.</t>
@@ -406,25 +433,21 @@
         </section>
     </section>
 
-    <section title="OOB Cache Client Control">
-        <section title="Redirection Control">
+    <section title="Controlling the client oob and cache">
+        <section title="OOB Redirection Control">
             <t>
                 NOT READY
             </t>
             <t>
                 The client cache will contain two entries: one for the response from the origin and one for 
-                the response from the cache. The "ma"- parameter in the cache resources location map controls 
+                the response from the cache. The "oob control" and "ma"- parameter in the cache map controls 
                 the redirection from the origin to a cache. The redirection applies when the client receives 
                 the "ma" parameter in the map in the response and for as long as the ma parameter stipulates.
+                The "oob control" can have two values; "private" and "no_cache" and both can be present. The "private" usage is described below. If "no_cache" is present for a resource, the client MUST perform an eTag pre-flight to the origin.
             </t>
             <t>
                 The ma parameter has a global relevance, meaning it has precedence over client cache control 
                 directives for the cache response entry. 
-            </t>
-            <t>                
-                The origin MAY direct the client to end the redirection using by putting an no-cache directive 
-                on the cache url which the client MUST interpret to mean that a e-tag preflight is done to the 
-                origin server, a response to which the server MAY respond to with a ma value of zero.
             </t>
         </section>
         <section title="Private OOB Cache">
@@ -434,11 +457,11 @@
             <t>
                 The oob cache can be either shared or private. The origin server controls the 
                 behaviour of the client by adding a "private directive" in the cache map associated
-                with the resource.
+                with the resource. Additionaly, the origin server can restrict who can read the data using the content encryption key. How this is done in the origin server is not in scope of this document.
             </t>
             <t>
                 The client MUST treat a resource, marked with the private directive, as private. This means
-                that the client can only provide the resource to the browsing context authenticated with the origin server. 
+                that the client MUST only provide the resource to the browsing context authenticated with the origin server.
             </t>
         </section>
         <section title="Cache Response Client Cache Control">
@@ -459,8 +482,26 @@
     
 	<section title="Security Considerations">
 		<t>
-			TBD
+			A lot of TODO's.
 		</t>
+		<section title="Guidelines">
+			<t>
+			<list style="symbols">
+				<t> The oob cache resource identity SHOULD be a pseudo-random string</t>
+				<t> The origin server SHOULD use random padding of content delivered oob.</t>
+			</list>
+		</t>
+		</section>
+		<section title="Threats">
+			<t> In case of a group key and the client group is open, an oob cache may act as a client and obtain the key. Measures for disabling the cache to act as a client MUST be taken to avoid the cache not know the origin server such as having an "anonymization" function in between a cache and an origin. TODO: Outline such a function between the origin server and oob cache.
+			</t>
+			<t> If the client group is restricted with strong client authentication towards the origin (closed) or groups with single clients or single requests, then a cache cannot act as a client towards the origin server.
+			</t>
+			<t> If the cache is individual (private), the cache can still see the user downloaded the same file at different times and/or at different locations.
+			</t>
+			<t> If the cache is shared between several clients, the cache can see that the users downloaded the same file.
+			</t>
+		</section>
 	</section>
 	
 	<section title="IANA Considerations">
