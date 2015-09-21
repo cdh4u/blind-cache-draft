@@ -69,14 +69,14 @@
             This document describes a framework for delivering protected HTTP payload from an origin to a client via an out-of-band cache (oob cache).
         </t>
         <t>
-            The framework also describes how individual mechanisms, such as payload encryption, out-of-band content delivery, and content integrity could be leveraged. It furthermore outlines the procedures that could be used by the origin server to configure the use of the cache.
+            The framework also describes how individual mechanisms, such as payload encryption, out-of-band content delivery, and content integrity could be leveraged. It furthermore outlines the procedures that could be used by the origin server to configure the use of the oob cache.
         </t>
         <t>
             The framework assumes that the web administrator of the origin has control of how much content information is exposed to the oob cache, depending
             on e.g. whether the oob cache is hosted by a third party, or the risk of a third party getting access to the information stored at the oob cache.
         </t>
         <t>
-            The oob cache might reachable from the origin server as a HTTP server, or it might be deployed behind a NAT in which case it is not reachable. Both options are considered relevant but in this version, only the case where the cache is visible to the origin server is described.
+            The oob cache might reachable from the origin server as a HTTP server, or it might be deployed behind a NAT in which case it is not reachable. Both options are considered relevant but in this version, only the case where the oob cache is visible to the origin server is described.
         </t>
     </section>
 
@@ -106,7 +106,7 @@
             <t>
                 The decision which resources are delivered to a user via an oob cache might e.g. be done
                 based on static configuration, or dynamically based on information from an analytics tool.
-                [ref] describes the Object Dependency Graph, an information model of how a web sites objects are consumed by a user and used to decide opportunistically what to make available in a client or a cache before the an explicit request for the object(s) has been made.
+                [ref] describes the Object Dependency Graph, an information model of how a web sites objects are consumed by a user and used to decide opportunistically what to make available in a client or a cache before an explicit request for the object(s) has been made.
             </t>
             <t>
                 NOTE: The mechanism for deciding which resources will be delivered via an oob cache
@@ -121,7 +121,7 @@
             </t>
             <t>
                 The architecture also assumes that the resources delivered out-of-band via the oob cache from the origin server to the
-                client is protected using an HTTP content encryption/protection information associated with the resources, are delivered
+                client are protected using an HTTP content encryption/protection scheme. Information associated with the resources and needed to decrypt them is delivered
                 to the client on the secure client-origin connection.
             </t>
             <figure>
@@ -162,7 +162,7 @@
         </section>
         <section title="Cache Map">
             <t>
-                When the origin server places an object on an oob-cache it will create a map between
+                When the origin server places an object on an oob cache it will create a map between
                 the origin object URL and the cached object URL. An out-of-bands response to the
                 user agent can contain all or a subset of the maps stored by the origin server. The
                 list of maps also contain meta data about each item, e.g. content-type and
@@ -188,7 +188,7 @@
                 ]]></artwork>
             </figure>
             <t>
-                An origin server may be designed such that it keeps track of individual clients cache map, which implies managing large amounts of states. Another design with lesser states is an origin server that does not keep track on the status of individual clients cache map. Instead, each time the client requests a resource from the origin server, a new cache map is created and included in the response to the client.
+                An origin server may be designed such that it keeps track of individual client's cache map, which implies managing large amounts of states. Another design with fewer states is an origin server that does not keep track on the status of individual client's cache map. Instead, each time the client requests a resource from the origin server, a new cache map is created and included in the response to the client.
 
                 It is left to the origin server developer to decide which design that is more suitable for their respective needs.
 
@@ -197,7 +197,7 @@
         </section>
         <section title="Object Dependency Graph">
             <t>
-                An object dependency graph describes relationships between objects including dependencies, probable sequence of browsing through a web site. An instance if the cache map is typically created using a object dependency graph as input to a process creating a cache map with a suitable depth. This description of this process is outside this document.
+                An object dependency graph describes relationships between objects including dependencies and probable sequence of browsing through a web site. An instance of the cache map is typically created using a object dependency graph as input to a process creating a cache map with a suitable depth. This description of this process is outside this document.
             </t>
         </section>
     </section>
@@ -224,7 +224,7 @@
                         <t> The origin server configures the oob cache and responds to the client with a cache map. </t>
                     </list>
                 </t>
-                <t> TBD: The above is applicable if the cache is reachable for the origin server. The case when the oob cache is behind a NAT is TBD.
+                <t> TBD: The above is applicable if the oob cache is reachable for the origin server. The case when the oob cache is behind a NAT is TBD.
                 </t>
             </section>
             <section title="Cache Not Reachable">
@@ -238,7 +238,7 @@
                         </t>
                         <t> In case of a "server unreachable", the origin server responds with the resource. The origin server MAY provide an updated cache map in the response to the client. In case of "object not found" and the origin server has a priori knowledge of the reason being that it has deleted the object, the origin server reponds with the resource. It MAY provide an updated cache map.
                         </t>
-                        <t> The origin server may have decided that the cache no longer should be used. In that case, the origin server reponds with the resource and an empty cache map. TODO: How is this expressed.
+                        <t> The origin server may have decided that the oob cache no longer should be used. In that case, the origin server reponds with the resource and an empty cache map. TODO: How is this expressed.
                         </t>
                         <t> The client updates the cache map. In case of an empty cache map, the client MUST consider the oob delivery to be invalidated henceforth. The client SHOULD include the BC header in future requests for resources from the origin server.
                         </t>
@@ -286,7 +286,7 @@
                         client shall use when requesting the resource from the oob cache.</t>
                         <t>The oob cache sends a response, and indicates successful storage of the resource. The oob cache also indicates the selected max expiry time
                         (equal or less than the time requested by the origin server).</t>
-                        <t>The origin server sends a response to the client. The response contains a "cache map" [ref]. For any given resource, the cache map
+                        <t>The origin server sends a response to the client. The response contains a cache map [ref]. For any given resource, the cache map
                         contains the origin server location URL, the oob cache location URL, and additional information (e.g. max expire time, client oob cache
                         directives, content information, integrity information).</t>
                     </list>
@@ -301,7 +301,7 @@
                 <t>
                     The following steps take place:
                     <list style="symbols">
-                        <t>The origin server sends a response to the client. The response contains a "cache map" [ref]. For any given resource, the cache map
+                        <t>The origin server sends a response to the client. The response contains a cache map [ref]. For any given resource, the cache map
                         contains the origin server location URL, the oob cache location URL, and additional information (e.g. max expire time, client cache
                         directives, content information).</t>
                     </list>
@@ -332,7 +332,7 @@
             <section title="Removal of single Cached Resource (origin server)">
                 <t>
                     In this case the origin server requests the oob cache to remove a resource that the origin server has previously
-                    pushed to the cache, and for which the expire time has yet not been reached.
+                    pushed to the oob cache, and for which the expire time has yet not been reached.
                 </t>
                 <t>
                     The following steps take place:
