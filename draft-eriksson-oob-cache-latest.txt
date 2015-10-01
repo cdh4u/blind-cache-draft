@@ -5,7 +5,7 @@
 Network Working Group                                        G. Eriksson
 Internet-Draft                                               C. Holmberg
 Intended status: Standards Track                                Ericsson
-Expires: March 13, 2016                               September 10, 2015
+Expires: April 3, 2016                                   October 1, 2015
 
 
                 Delivering content via Out-Of-Band Cache
@@ -46,16 +46,16 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on March 13, 2016.
+   This Internet-Draft will expire on April 3, 2016.
 
 Copyright Notice
 
 
 
 
-Eriksson & Holmberg      Expires March 13, 2016                 [Page 1]
+Eriksson & Holmberg       Expires April 3, 2016                 [Page 1]
 
-Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+Internet-Draft  Delivering content via Out-Of-Band Cache    October 2015
 
 
    Copyright (c) 2015 IETF Trust and the persons identified as the
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Eriksson & Holmberg      Expires March 13, 2016                 [Page 2]
+Eriksson & Holmberg       Expires April 3, 2016                 [Page 2]
 
-Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+Internet-Draft  Delivering content via Out-Of-Band Cache    October 2015
 
 
      7.2.  Threats . . . . . . . . . . . . . . . . . . . . . . . . .  13
@@ -142,7 +142,7 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
    payload encryption, out-of-band content delivery, and content
    integrity could be leveraged.  It furthermore outlines the procedures
    that could be used by the origin server to configure the use of the
-   cache.
+   oob cache.
 
    The framework assumes that the web administrator of the origin has
    control of how much content information is exposed to the oob cache,
@@ -153,7 +153,7 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
    The oob cache might reachable from the origin server as a HTTP
    server, or it might be deployed behind a NAT in which case it is not
    reachable.  Both options are considered relevant but in this version,
-   only the case where the cache is visible to the origin server is
+   only the case where the oob cache is visible to the origin server is
    described.
 
 2.  Abbreviations
@@ -165,9 +165,9 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
 
 
 
-Eriksson & Holmberg      Expires March 13, 2016                 [Page 3]
+Eriksson & Holmberg       Expires April 3, 2016                 [Page 3]
 
-Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+Internet-Draft  Delivering content via Out-Of-Band Cache    October 2015
 
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -190,7 +190,7 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
    based on information from an analytics tool.  [ref] describes the
    Object Dependency Graph, an information model of how a web sites
    objects are consumed by a user and used to decide opportunistically
-   what to make available in a client or a cache before the an explicit
+   what to make available in a client or a cache before an explicit
    request for the object(s) has been made.
 
    NOTE: The mechanism for deciding which resources will be delivered
@@ -204,10 +204,10 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
    secured using TLS or a corresponding secure transport.
 
    The architecture also assumes that the resources delivered out-of-
-   band via the oob cache from the origin server to the client is
-   protected using an HTTP content encryption/protection information
-   associated with the resources, are delivered to the client on the
-   secure client-origin connection.
+   band via the oob cache from the origin server to the client are
+   protected using an HTTP content encryption/protection scheme.
+   Information associated with the resources and needed to decrypt them
+   is delivered to the client on the secure client-origin connection.
 
 
        +---------+            +----------+
@@ -221,9 +221,9 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
 
 
 
-Eriksson & Holmberg      Expires March 13, 2016                 [Page 4]
+Eriksson & Holmberg       Expires April 3, 2016                 [Page 4]
 
-Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+Internet-Draft  Delivering content via Out-Of-Band Cache    October 2015
 
 
                  \            /  HTTPS
@@ -250,16 +250,12 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
 
 4.4.  Cache Map
 
-   When a resource is stored on an oob cache, the origin server location
-   URL of the resource will be mapped to a oob cache location URL.  The
-   mapping, together with other information (e.g. content type) will be
-   stored in a "cache map".  The cache map will be created by the origin
-   server and will be delivered to the client.  The cache map may
-   include indications of out-of-band delivery of several resources
-   including the one requested.  How many objects that are in the cache
-   map is referred to a the "depth" of the cache map.  A cache map will
-   typically be changed during the course of a browsing session unless
-   it reflects all content on the cache.
+   When the origin server places an object on an oob cache it will
+   create a map between the origin object URL and the cached object URL.
+   An out-of-bands response to the user agent can contain all or a
+   subset of the maps stored by the origin server.  The list of maps
+   also contain meta data about each item, e.g. content-type and
+   encryption information.
 
 
    +----------------------------------------------------------------------+
@@ -274,21 +270,22 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
    |                        |                           |       ...       |
    | -----------------------|---------------------------|-----------------|
    | example.com/mustang.jpg| cache.ex1.cm/lxUrP/56333  |       ...       |
-
-
-
-Eriksson & Holmberg      Expires March 13, 2016                 [Page 5]
-
-Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
-
-
    +----------------------------------------------------------------------+
 
 
+
+
+
+
+Eriksson & Holmberg       Expires April 3, 2016                 [Page 5]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache    October 2015
+
+
    An origin server may be designed such that it keeps track of
-   individual clients cache map, which implies managing large amounts of
-   states.  Another design with lesser states is an origin server that
-   does not keep track on the status of individual clients cache map.
+   individual client's cache map, which implies managing large amounts
+   of states.  Another design with fewer states is an origin server that
+   does not keep track on the status of individual client's cache map.
    Instead, each time the client requests a resource from the origin
    server, a new cache map is created and included in the response to
    the client.  It is left to the origin server developer to decide
@@ -298,8 +295,8 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
 4.5.  Object Dependency Graph
 
    An object dependency graph describes relationships between objects
-   including dependencies, probable sequence of browsing through a web
-   site.  An instance if the cache map is typically created using a
+   including dependencies and probable sequence of browsing through a
+   web site.  An instance of the cache map is typically created using a
    object dependency graph as input to a process creating a cache map
    with a suitable depth.  This description of this process is outside
    this document.
@@ -330,19 +327,19 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
       object.  It may also decide to refer the delivery for other
       objects than the one requested.
 
-
-
-
-Eriksson & Holmberg      Expires March 13, 2016                 [Page 6]
-
-Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
-
-
    o  The origin server configures the oob cache and responds to the
       client with a cache map.
 
-   TBD: The above is applicable if the cache is reachable for the origin
-   server.  The case when the oob cache is behind a NAT is TBD.
+
+
+
+Eriksson & Holmberg       Expires April 3, 2016                 [Page 6]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache    October 2015
+
+
+   TBD: The above is applicable if the oob cache is reachable for the
+   origin server.  The case when the oob cache is behind a NAT is TBD.
 
 5.2.2.  Cache Not Reachable
 
@@ -362,8 +359,8 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
       it has deleted the object, the origin server reponds with the
       resource.  It MAY provide an updated cache map.
 
-   o  The origin server may have decided that the cache no longer should
-      be used.  In that case, the origin server reponds with the
+   o  The origin server may have decided that the oob cache no longer
+      should be used.  In that case, the origin server reponds with the
       resource and an empty cache map.  TODO: How is this expressed.
 
    o  The client updates the cache map.  In case of an empty cache map,
@@ -386,17 +383,16 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
    presence of an oob cache in a suitable network location along with
    willingness to accept OOB, and the origin server decides to deliver
    resources to the client via the oob cache.  The following procedure
-
-
-
-Eriksson & Holmberg      Expires March 13, 2016                 [Page 7]
-
-Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
-
-
    describes how the origin server registers itself with the oob cache,
    and exchanges the necessary information needed for the out-of-band
    delivery of the resources.
+
+
+
+Eriksson & Holmberg       Expires April 3, 2016                 [Page 7]
+
+Internet-Draft  Delivering content via Out-Of-Band Cache    October 2015
+
 
    The following steps take place:
 
@@ -434,20 +430,24 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
       server).
 
    o  The origin server sends a response to the client.  The response
-      contains a "cache map" [ref].  For any given resource, the cache
-      map contains the origin server location URL, the oob cache
-      location URL, and additional information (e.g. max expire time,
-      client oob cache directives, content information, integrity
-      information).
+      contains a cache map [ref].  For any given resource, the cache map
+      contains the origin server location URL, the oob cache location
+      URL, and additional information (e.g. max expire time, client oob
+      cache directives, content information, integrity information).
 
 5.3.3.  Re-Use of Cached Resource
 
 
 
 
-Eriksson & Holmberg      Expires March 13, 2016                 [Page 8]
+
+
+
+
+
+Eriksson & Holmberg       Expires April 3, 2016                 [Page 8]
 
-Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+Internet-Draft  Delivering content via Out-Of-Band Cache    October 2015
 
 
    In this case the origin has previously pushed a resource, requested
@@ -460,10 +460,10 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
    The following steps take place:
 
    o  The origin server sends a response to the client.  The response
-      contains a "cache map" [ref].  For any given resource, the cache
-      map contains the origin server location URL, the oob cache
-      location URL, and additional information (e.g. max expire time,
-      client cache directives, content information).
+      contains a cache map [ref].  For any given resource, the cache map
+      contains the origin server location URL, the oob cache location
+      URL, and additional information (e.g. max expire time, client
+      cache directives, content information).
 
 5.3.4.  Replace Cached Resource
 
@@ -490,8 +490,8 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
 5.3.5.  Removal of single Cached Resource (origin server)
 
    In this case the origin server requests the oob cache to remove a
-   resource that the origin server has previously pushed to the cache,
-   and for which the expire time has yet not been reached.
+   resource that the origin server has previously pushed to the oob
+   cache, and for which the expire time has yet not been reached.
 
    The following steps take place:
 
@@ -501,9 +501,9 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
 
 
 
-Eriksson & Holmberg      Expires March 13, 2016                 [Page 9]
+Eriksson & Holmberg       Expires April 3, 2016                 [Page 9]
 
-Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+Internet-Draft  Delivering content via Out-Of-Band Cache    October 2015
 
 
    o  The oob cache sends a response, indicating that the resource was
@@ -557,9 +557,9 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
 
 
 
-Eriksson & Holmberg      Expires March 13, 2016                [Page 10]
+Eriksson & Holmberg       Expires April 3, 2016                [Page 10]
 
-Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+Internet-Draft  Delivering content via Out-Of-Band Cache    October 2015
 
 
    OPEN ISSUE: What happens to resources stored at the oob cache when
@@ -613,9 +613,9 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
 
 
 
-Eriksson & Holmberg      Expires March 13, 2016                [Page 11]
+Eriksson & Holmberg       Expires April 3, 2016                [Page 11]
 
-Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+Internet-Draft  Delivering content via Out-Of-Band Cache    October 2015
 
 
    o  The client interacts with the origin server, see [ref]
@@ -669,9 +669,9 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
 
 
 
-Eriksson & Holmberg      Expires March 13, 2016                [Page 12]
+Eriksson & Holmberg       Expires April 3, 2016                [Page 12]
 
-Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+Internet-Draft  Delivering content via Out-Of-Band Cache    October 2015
 
 
    A no-cache directive MUST be treated such by the client that a pre-
@@ -725,9 +725,9 @@ Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
 
 
 
-Eriksson & Holmberg      Expires March 13, 2016                [Page 13]
+Eriksson & Holmberg       Expires April 3, 2016                [Page 13]
 
-Internet-Draft  Delivering content via Out-Of-Band Cache  September 2015
+Internet-Draft  Delivering content via Out-Of-Band Cache    October 2015
 
 
    [RFC EDITOR NOTE: Please remove this section when publishing]
@@ -781,4 +781,4 @@ Authors' Addresses
 
 
 
-Eriksson & Holmberg      Expires March 13, 2016                [Page 14]
+Eriksson & Holmberg       Expires April 3, 2016                [Page 14]
