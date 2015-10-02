@@ -37,20 +37,22 @@
     </author>
 
     <date year="2015" />
-    <area>RAI</area>
+    <area>Network Group</area>
     <abstract>
         <t>
-            This document describes a framework for delivering protected HTTP payload from an origin to a client via an out-of-band cache (oob cache).
+            This document describes a framework for delivering protected HTTP payload from an origin to a client via an out-of-band cache (oob cache). It is NOT [yet] an IETF draft of a W3C contribution but rather a discussion document with information that MAY be relevant for both aforementioned fora or others with interest in the subject.
         </t>
         <t>
-            The framework also describes how individual mechanisms, such as payload encryption, out-of-band content delivery, and content integrity could be leveraged.
+            The framework adescribes how individual mechanisms, such as payload encryption [REF], out-of-band content delivery [REF], and content integrity [REF] could be leveraged.
         </t>
         <t>
-            The framework assumes that the web administrator of the origin has control of how much content information is exposed to the oob cache, depending
-            on e.g. whether the oob cache is hosted by a third party, or the risk of a third party getting access to the information stored at the oob cache.
+            The framework assumes that the web administrator of the origin should be able to control how much content information is exposed to a deep network oob cache.
         </t>
         <t>
-            The oob cache might be reachable from the origin server, or it might be deployed behind a NAT. Both options are considered in the document.
+        	An oob cache may be provided by a separate actor or belong to the same actor as the origin, a kind of distributed origin. However, if in the case of a distributed origin, there are reasons, depending for instance on whether the oob cache is provided by a third party, or the risk of a third party getting access to the information stored at the oob cache. One could debate whether the work oob cache is applicable in the distributed origin case but this is what this document does to keeps things simple this time around.
+        </t>
+        <t>
+            The oob cache might be reachable from the origin server, or it might be deployed behind a NAT. Both options are considered in the document, focus being on the case with the oob cache being visible for the origin.
         </t>
     </abstract>
 </front>
@@ -59,11 +61,10 @@
     <section title="Introduction">
         <t>
             When content providers provide services to user, they need to consider user security and privacy. As the Internet traffic is transitioning towards TLS [ref],
-            content that could previously be cached in inline caches will need to be managed by the origin servers of the content providers.
+            content that could previously be cached in inline caches will need to be processed by the origin servers of the content providers.
         </t>
         <t>
-            However, for cost and/or delivery time efficiency, there are situations where it still makes sense for a content provider to
-            deliver resources from the origin to a cache, from where clients will fetch the resources.
+            However, for cost and/or delivery time efficiency, there are situations where it still makes sense for a content provider to deliver resources from the origin via a cache, from where clients will fetch the resources. Delivering 
         </t>
         <t>
             This document describes a framework for delivering protected HTTP payload from an origin to a client via an out-of-band cache (oob cache).
@@ -76,7 +77,10 @@
             on e.g. whether the oob cache is hosted by a third party, or the risk of a third party getting access to the information stored at the oob cache.
         </t>
         <t>
-            The oob cache might reachable from the origin server as a HTTP server, or it might be deployed behind a NAT in which case it is not reachable. Both options are considered relevant but in this version, only the case where the oob cache is visible to the origin server is described.
+            The oob cache may be reachable from the origin server as a HTTP server, or it might be deployed behind a NAT in which case it is not reachable from the origin server. Both options are considered relevant but in this version, only the case where the oob cache is visible to the origin server is described in detail. The case with the oob cache deployed behind a NAT is described briefly in an appendix [REF].
+        </t>
+        <t>
+        	The authors of the document are keenly aware of oob delivery via a oob cache is most likely not as secure as serving the client request from the origin server over TLS. This is one of the reasons why this document exists- to enable open, public discussions of the potential risks oob cache delivery may introduce and work on means to minimize these.
         </t>
     </section>
 
@@ -100,17 +104,15 @@
                 When an origin server administrator decides to deliver resources via an oob cache,
                 the resource information exposed to the oob cache should be minimized, especially
                 if the oob cache is owned by a 3rd party or on a 3rd part cloud infrastructure.
-                Mechanisms that can be used for this purpose are e.g. HTTP payload encryption [ref], payload integrity protection [ref]
-                and OOB [ref].
+                Mechanisms that can be used for this purpose are e.g. HTTP payload encryption [ref], content integrity protection [ref].
             </t>
             <t>
-                The decision which resources are delivered to a user via an oob cache might e.g. be done
+                The origin server decision which resources are delivered to a client via an oob cache might e.g. be done
                 based on static configuration, or dynamically based on information from an analytics tool.
-                [ref] describes the Object Dependency Graph, an information model of how a web sites objects are consumed by a user and used to decide opportunistically what to make available in a client or a cache before an explicit request for the object(s) has been made.
+                [ref] describes the Object Dependency Graph, an information model of how a web sites objects are consumed by a user. This can used to decide opportunistically what to make available in a client or a cache before an explicit request for the object(s) has been made by the client.
             </t>
             <t>
-                NOTE: The mechanism for deciding which resources will be delivered via an oob cache
-                is outside the scope of this document.
+                NOTE: The mechanism for deciding which resources will be delivered via an oob cache and which are best served from the origin server is outside the scope of this document.
             </t>
         </section>
         <section title="Architecture">
@@ -120,8 +122,7 @@
                 between the entities is secured using TLS or a corresponding secure transport.
             </t>
             <t>
-                The architecture also assumes that the resources delivered out-of-band via the oob cache from the origin server to the
-                client are protected using an HTTP content encryption/protection scheme. Information associated with the resources and needed to decrypt them is delivered
+                The architecture also assumes that the resources delivered out-of-band via the oob cache from the origin server to the client are protected using an HTTP content encryption/protection scheme. Information associated with the resources and needed to decrypt them is delivered
                 to the client on the secure client-origin connection.
             </t>
             <figure>
@@ -178,6 +179,7 @@
 |                        |                           | 'oob-control'   |
 |                        |                           | 'max-age'       |
 |                        |                           | 'encryption-key'|
+|                        |                           | 'content-hash'  |
 | -----------------------|---------------------------|-----------------|
 | example.com/style.css  | cache.ex1.com/lxUrP/74113 | 'content-type'  |
 |                        |                           |       ...       |
@@ -192,7 +194,7 @@
 
                 It is left to the origin server developer to decide which design that is more suitable for their respective needs.
 
-                Further details of the cache map are described in [ref].
+                Further details of the cache map are described in section [ref].
             </t>
         </section>
         <section title="Object Dependency Graph">
@@ -513,11 +515,35 @@
         </t>
     </section>
 
-    <section title="Acknowledgements">
+    <section title="Contributions and Acknowledgements">
         <t>
-            TBD
+            First and foremost Martin Thomson of Mozilla, the origin of this idea, MUST be acknowledged. John Mattsson, Daniel Lindström, Magnus Westerlund, Stefan Håkansson and Marcus Ihlar made several significat contributions. Stefan Eissing and Julian Reschke also provided valuable feedback and helped in synchronizing with the OOB Delivery draft and also suggestions of enhancements for how to provice cache-maps.
         </t>
     </section>
+    <section title="Appendix: Cache deloyed behind a NAT">
+		<t>
+			In some deployments, the cache can be deloyed behind a NAT and therefore not reachable by the origin server. In this case, the oob cache need to connect to the origin server to allow for an exchange of messages used to configure the cache.
+
+			At least two issues can be identified:
+ 				<t>
+                    <list style="symbols">
+                        <t>How make the oob cache connect to the origin server?</t>
+                        <t>How should the origin- cache procedures be realized when the cache is a HTTP client and the origin server is a HTTP server?</t>
+                    </list>
+                </t>
+		</t>
+
+	</section>
+	<section title="Appendix: Using Service Worker to implement Blind Cache">
+		<t>
+			The blind cache functionality can be implemented in the HTTP stack and not visible for the Web application. An alternative approach is to leverage the Service Worker mechanism [REF]. When the Service Worker is used, the BC client logic is implented in the JavaScript run inte SW. This also means that since the oob cache is of another origin that the origin server (sorry for the confusion), CORS and CSP need to be used. 
+		</t>
+	</section>
+	<section title="Appendix: Cache-map as a Web resource">
+		<t>
+			Placeholder.
+		</t>
+	</section>
 
     <section title="Change Log">
         <t>[RFC EDITOR NOTE: Please remove this section when publishing]</t>
