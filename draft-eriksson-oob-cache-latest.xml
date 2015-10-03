@@ -517,12 +517,14 @@
 
     <section title="Contributions and Acknowledgements">
         <t>
-            First and foremost Martin Thomson of Mozilla, the origin of this idea, MUST be acknowledged. John Mattsson, Daniel Lindström, Magnus Westerlund, Stefan Håkansson and Marcus Ihlar made several significat contributions. Stefan Eissing and Julian Reschke also provided valuable feedback and helped in synchronizing with the OOB Delivery draft and also suggestions of enhancements for how to provice cache-maps.
+            First and foremost Martin Thomson of Mozilla, the origin of the BC idea, MUST be acknowledged. Julian Reschke for the OOB Delivery draft. John Mattsson, Daniel Lindström, Magnus Westerlund, Stefan Håkansson and Marcus Ihlar made several significat contributions. Stefan Eissing and Julian Reschke also provided valuable feedback on this document and helped in synchronizing with the OOB Delivery draft and also suggested valuable enhancements for how to provide cache-maps.
         </t>
     </section>
     <section title="Appendix: Cache deloyed behind a NAT">
 		<t>
 			In some deployments, the cache can be deloyed behind a NAT and therefore not reachable by the origin server. In this case, the oob cache need to connect to the origin server to allow for an exchange of messages used to configure the cache.
+
+            An example of such situations are oob caches inside a private network, like an Enterprise network.
 
 			At least two issues can be identified:
  				<t>
@@ -535,9 +537,9 @@
             <figure>
                 <artwork align="left" alt="" height="" name="" type="" width="" xml:space="preserve"><![CDATA[
 
-    +---------+             +-------+      +----------+
-    |         |    HTTPS    |  NAT  |      |          |
-    |  Client |-------------|       |------|  Origin  |
+    +---------+                            +----------+
+    |         |    HTTPS    +-------+      |          |
+    |  Client |-------------|  NAT  |------|  Origin  |
     |         |             +-------+      |          |
     +---------+                            +----------+
            \                                  /
@@ -554,6 +556,13 @@
 
                 ]]></artwork>
             </figure>
+
+            <t>
+                One FW/NAT behaviour could be to only allow outgoing connections meaning neither the client nor the cache is visible/reachable for the Origin server.
+            </t>
+            <t>
+                In analyzing this deployment case, identifying and selecting which NAT/FW behaviours to design for would seem desirable.
+            </t>
 
             <figure>
                 <artwork align="left" alt="" height="" name="" type="" width="" xml:space="preserve"><![CDATA[
@@ -581,6 +590,9 @@
 
                 ]]></artwork>
             </figure>
+            <t>
+                There are obviously more questions to be identified in the future work. One desirable goal would however be to have the configuration protocol between the origin server and the oob cache as similar as possible in the two deployment scenarios.
+            </t>
 
 	</section>
 	<section title="Appendix: Using Service Worker to implement Blind Cache">
