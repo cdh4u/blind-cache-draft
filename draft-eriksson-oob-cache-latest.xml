@@ -532,6 +532,55 @@
                     </list>
                 </t>
 		</t>
+            <figure>
+                <artwork align="left" alt="" height="" name="" type="" width="" xml:space="preserve"><![CDATA[
+
+    +---------+             +-------+      +----------+
+    |         |    HTTPS    |  NAT  |      |          |
+    |  Client |-------------|       |------|  Origin  |
+    |         |             +-------+      |          |
+    +---------+                            +----------+
+           \                                  /
+            \                                /
+             \  HTTPS     				    / HTTPS
+              \                            /      
+               \                +-------+ /    
+                \               |  NAT  |/
+               +----------+    /+-------+
+               |    OOB   |  /
+               |   Cache  |/
+               |          |
+               +----------+
+
+                ]]></artwork>
+            </figure>
+
+            <figure>
+                <artwork align="left" alt="" height="" name="" type="" width="" xml:space="preserve"><![CDATA[
+ 
+     Client                            Origin Server                       OOB Cache
+        |       GET with BC header           |                                |
+        |----------------------------------->|                                |
+        |                                    |                                |
+        |       222 with Cache Map           |                                |
+        |<-----------------------------------|                                |
+        |                                    |   GET with BC-Connect header   |
+        |-------------------------------------------------------------------->|
+        |                                    |   GET                          |
+        |                                    |<-------------------------------|
+        |                                    |      "Configure the cache"     |
+        |                                    |<==============================>|
+        |        200 OK                      |                                |
+        |<--------------------------------------------------------------------|
+        |                                    |                                |
+        |        GET                         |                                |
+        |-------------------------------------------------------------------->|
+        |        200 OK                      |                                |
+        |<--------------------------------------------------------------------|
+        |                                    |                                |
+
+                ]]></artwork>
+            </figure>
 
 	</section>
 	<section title="Appendix: Using Service Worker to implement Blind Cache">
