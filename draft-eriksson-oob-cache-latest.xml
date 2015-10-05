@@ -106,18 +106,24 @@
     <section title="Principles and Concepts" anchor="sec-prin-conc">
         <section title="General">
             <t>
-                When an origin server administrator decides to deliver resources via an oob cache, the client must be able to verify that the delivered resource is the one requested from the origin and that is has not been tampered with.
+                When an origin server administrator decides to deliver resources via an oob cache, the client must be able to verify that the 
+                delivered resource is the one requested from the origin and that is has not been tampered with.
                 The resource information exposed should be minimized, even to the oob cache, and especially
                 if the oob cache is owned by a 3rd party or on a 3rd part cloud infrastructure.
-                Mechanisms that can be used for this purpose are e.g. HTML Sub Resource Integrity, HTTP payload integrity protection [ref] and OOB [ref].
+                Mechanisms that can be used for this purpose are e.g. HTML Sub Resource Integrity, HTTP payload 
+                integrity protection [ref] and OOB [ref].
             </t>
             <t>
                 The decision by the origin server which resources are delivered to a client via an oob cache might e.g. be done
-                based on static configuration, or dynamically based on information from an analytics tool. In addition to performance and cost aspects, end user security and privacy should always be taken into consideration when deciding what and how to to deliver oob, in this case via a cache.
-                [ref] describes the Object Dependency Graph, an information model of how a web sites objects are consumed by a user. This can used to decide opportunistically what to make available in a client or a cache before an explicit request for the object(s) has been made by the client.
+                based on static configuration, or dynamically based on information from an analytics tool. In addition to 
+                performance and cost aspects, end user security and privacy should always be taken into consideration when 
+                deciding what and how to to deliver oob, in this case via a cache.                
             </t>
             <t>
-                NOTE: The mechanism for deciding which resources will be delivered via an oob cache and which are best served from the origin server is outside the scope of this document.
+                NOTE: The mechanism for deciding which resources will be delivered via an oob cache and which are best served from the 
+                origin server is outside the scope of this document. [annex-ref] [ref] describes the Object Dependency Graph (ODG) concept, 
+                which is an information model of how a web sites objects are consumed by a user. The ODG can used to decide opportunistically 
+                what to make available in a client or a cache before an explicit request for the object(s) has been made by the client.
             </t>
         </section>
         <section title="Architecture">
@@ -127,7 +133,9 @@
                 between the entities is secured using TLS or a corresponding secure transport.
             </t>
             <t>
-                The architecture also assumes that the resources delivered out-of-band via the oob cache from the origin server to the client are protected using an HTTP content protection scheme providing integrity protection and encryption. Information associated with the resources and needed to decrypt and verify integrity of them are delivered
+                The architecture also assumes that the resources delivered out-of-band via the oob cache from the origin server to 
+                the client are protected using an HTTP content protection scheme providing integrity protection and encryption. 
+                Information associated with the resources and needed to decrypt and verify integrity of them are delivered
                 to the client on the secure client-origin HTTPS connection.
             </t>
             <figure>
@@ -156,10 +164,13 @@
         <section title="OOB Cache Discovery">
             <t>
                 A client can use different mechanisms in order to discover the presence of available local oob caches. The
-                discovery mechanism MUST be secure in the sense that the client is assumed to assert the identity of the oob cache. If the client decided to use a discovered cache, it includes the identity of the oob cache when requesting resources from the origin.
+                discovery mechanism MUST be secure in the sense that the client is assumed to assert the identity of the 
+                oob cache. If the client decided to use a discovered cache, it includes the identity of the oob cache when 
+                requesting resources from the origin.
             </t>
             <t>
-                NOTE: This document assumes that the client performs the oob cache discovery. Origin discovery of oob caches is outside the scope of this document.
+                NOTE: This document assumes that the client performs the oob cache discovery. Origin discovery of oob caches 
+                is outside the scope of this document.
             </t>
         </section>
         <section title="Cache Map">
@@ -171,40 +182,42 @@
                 encryption information.
             </t>
             <t>
-                The 'SRI identity' parameter is a SHA-256 hash over the content. The hash is calculated as in W3C SRI [ref]. 'keyId' is an identifier for a symmetric key known by the client and the origin using e.g. Diffie-Hellman. The 'salt' parameter decides how to generate the content encryption key from they keying material identified by the keyID.
+                The 'SRI identity' parameter is a SHA-256 hash over the content. The hash is calculated as in W3C SRI [ref]. 'keyId' 
+                is an identifier for a symmetric key known by the client and the origin using e.g. Diffie-Hellman. The 'salt' parameter 
+                decides how to generate the content encryption key from they keying material identified by the keyID.
             </t>
             <figure>
                 <artwork align="left" alt="" height="" name="" type="" width="" xml:space="preserve"><![CDATA[
 
-+----------------------------------------------------------------------+
-| Origin server location | OOB Cache location        |   Parameters    |
-|----------------------------------------------------------------------|
-| example.com/ex_jsl.js  | cache.ex1.com/lxUrP/75991 | 'content-type'  |
-|                        |                           | 'oob-control'   |
-|                        |                           | 'max-age'       |
-|                        |                           | 'SRI integrity' |
-|                        |                           | 'keyID'         |
-|                        |                           | 'salt'          |
-| -----------------------|---------------------------|-----------------|
-| example.com/style.css  | cache.ex1.com/lxUrP/74113 | 'content-type'  |
-|                        |                           |       ...       |
-| -----------------------|---------------------------|-----------------|
-| example.com/mustang.jpg| cache.ex1.cm/lxUrP/56333  |       ...       |
-+----------------------------------------------------------------------+
++---------------------------------------------------------------------+
+| Origin server location | OOB Cache location        |   Parameters   |
+|---------------------------------------------------------------------|
+| example.com/ex_jsl.js  | cache.ex1.com/lxUrP/75991 | 'content-type' |
+|                        |                           | 'oob-control'  |
+|                        |                           | 'max-age'      |
+|                        |                           | 'SRI integrity'|
+|                        |                           | 'keyID'        |
+|                        |                           | 'salt'         |
+| -----------------------|---------------------------|----------------|
+| example.com/style.css  | cache.ex1.com/lxUrP/74113 | 'content-type' |
+|                        |                           |       ...      |
+| -----------------------|---------------------------|----------------|
+| example.com/mustang.jpg| cache.ex1.cm/lxUrP/56333  |       ...      |
++---------------------------------------------------------------------+
 
                 ]]></artwork>
             </figure>
             <t>
-                An origin server may be designed such that it keeps track of individual client's cache map, which implies managing large amounts of states. Another design with fewer states is an origin server that does not keep track on the status of individual client's cache map. Instead, each time the client requests a resource from the origin server, a new cache map is created and included in the response to the client.
-
-                It is left to the origin server developer to decide which design that is more suitable for their respective needs.
-
-                Further details of the cache map are described in section [ref].
+                An origin server may be designed such that it keeps track of individual client's cache map, which implies managing large amounts 
+                of states. Another design with fewer states is an origin server that does not keep track on the status of individual client's cache 
+                map. Instead, each time the client requests a resource from the origin server, a new cache map is created and included in the 
+                response to the client.
             </t>
-        </section>
-        <section title="Object Dependency Graph">
             <t>
-                An object dependency graph describes relationships between objects including dependencies and probable sequence of browsing through a web site. An instance of the cache map is typically created using a object dependency graph as input to a process creating a cache map with a suitable depth. This description of this process is outside this document.
+                It is left to the origin server developer to decide which design that is more suitable for their respective needs.
+            </t>
+            <t>
+                Further details of the cache map are described in section [ref].
             </t>
         </section>
     </section>
@@ -501,54 +514,87 @@
         </section>
     </section>
 
-    <section title="Controlling the client oob and cache">
-        <section title="OOB Redirection Control">
+    <section title="Client Cache Control">
+        <section title="General">
             <t>
-                NOT READY.
-            </t>
-            <t>
-                The client cache will contain two entries: one for the response from the origin and one for
-                the response from the cache. The "oob control" and "ma"- parameter in the cache map controls
-                the redirection from the origin to a cache. The redirection applies when the client receives
-                the "ma" parameter in the map in the response and for as long as the ma parameter stipulates.
-                The "oob control" can have two values; "private" and "no_cache" and both can be present. The "private" usage is described below. If "no_cache" is present for a resource, the client MUST perform an eTag pre-flight to the origin.
-            </t>
-            <t>
-                The ma parameter has a global relevance, meaning it has precedence over client cache control
-                directives for the cache response entry.
+                A client typically maintains a local HTTP cache, for storing pages, resources etc. This section
+                describes the considerations associated with cached content received from the origin, and
+                redirection information from the oob cache, and how the client HTTP cache can be controlled 
+                using "cache control" directives in the cache map.
             </t>
         </section>
-        <section title="Private OOB Cache">
-            <t>
-                NOT READY
-            </t>
-            <t>
-                The oob cache can be either shared or private. The origin server controls the
-                behaviour of the client by adding a "private directive" in the cache map associated
-                with the resource. Additionaly, the origin server can restrict who can read the data using the content encryption key. How this is done in the origin server is not in scope of this document.
-            </t>
-            <t>
-                The client MUST treat a resource, marked with the private directive, as private. This means
-                that the client MUST only provide the resource to the secure browsing context authenticated with the origin server.
-            </t>
-            <t>
-                Private caches shall use an individually negotiated encryption key. The key may for example be generated using the key agreement mechanism specified in Web Push [ref].
-            </t>
+        <section title="Cached OOB Cache Resources">
+            <section title="Cache Response Client Cache Control">
+                <t>
+                    Responses received from the oob cache might be placed in the local HTTP cache of the client.
+                    This section describes how "cache control" directives in the cache map can be used to
+                    control cached content received from the oob cache. The directives are based on the HTTP cache 
+                    control mechanisms.                
+                </t>
+                <t>
+                    NOTE: The directives will overwrite cache control information received in the response itself
+                    from the oob cache.
+                </t>
+                <t>
+                    A 'no-cache' direction means that the client MUST send a request towards the oob cache,
+                    and include the previously received ETag value (using the HTTP If-None-Match header field)
+                    associated with the requested resource, in order for the oob cache to validate whether the 
+                    requested resource content has changed. We refer to this as "ETag preflight".
+                </t>
+                <t>
+                    A 'no-store' directive means that the client MUST NOT cache the response received from the oob cache.
+                </t>
+                <t>
+                    A 'max-age' directive means that the directive value MUST be applied to the response received from
+                    the oob cache. 
+                </t>
+            </section>
         </section>
-        <section title="Cache Response Client Cache Control">
-            <t>
-                NOT READY
-            </t>
-            <t>
-                The oob cache might control the client cache handling of a resource, using the HTTP
-                directives (e.g. no-cache, max-age).
-            </t>
-            <t>
-                A no-cache directive MUST be treated such by the client that a pre-flight e-tag check is done towards the cache.
-                A max-age directive MUST be treated as specified in RFC H2 or whatever TODO: reference for client cache control
-                behavior. No-store MUST be interpreted to mean do not cache the cache response.
-            </t>
-        </section>
+
+        <section title="Redirection">
+            <section title="General">
+                <t>
+                    The cache map provides the mapping between the origin URL and the oob cache URL associated
+                    with a resource.
+                </t>
+                <t>                    
+                    The "oob control" and "ma" directives in the cache map control the redirection
+                    from the origin to the oob cache. The redirection applies from when the client
+                    receives the map with the "ma" directive, until the directive value expires.
+                </t>
+                <t>
+                    The "oob control" directive can have one or both of the following values: "private" and "no_cache".
+                </t>
+                <t>
+                    The "private" value is described in the section below.
+                </t>
+                <t>
+                    The "no_cache" value means that the client MUST send a request towards the origin, and
+                    include the previously received ETag value (using the HTTP If-None-Match header field)
+                    associated with the requested resource, in order to validate whether the mapping information
+                    is still valid.
+                </t>
+                <t>
+                    The "ma" directive takes precedence over the directives described in the previous section.
+                </t>
+            </section>
+            <section title="Private OOB Cache">
+                <t>
+                    The oob cache can be either shared or private. The origin server can control the
+                    behaviour of the client by associating a "private" directive with a resource in the 
+                    cache map.
+                </t>
+                <t>
+                    A client MUST treat a resource, marked with the "private" directive, as private. This means
+                    that the client MUST only provide the resource to the secure browsing context authenticated 
+                    with the origin server.
+                </t>
+                <t>
+                    Private caches MUST use an individually negotiated encryption key. The key can e.g. be 
+                    generated using the key agreement mechanism specified in Web Push [ref].
+                </t>
+            </section>            
+        </section>        
     </section>
 
     <section title="Security Considerations">
@@ -699,7 +745,7 @@
       </section>
 
       </section>
-      <section title="Appendix: Enhancement- Cache Map as a Web resource">
+      <section title="Appendix: Cache Map as a Web resource">
         <t>
             The cache map can be treated as a Web resource. This has several promising advantages such as having dedicated server managing the cache-map life cycle including interaction with the client. The following text outlines such a realization.
         </t>
@@ -800,12 +846,14 @@
         </t>
     </section>
 
-	<section title="Appendix: Cache-map as a Web resource">
+	<section title="Appendix: Object Dependency Graph">
 		<t>
-			Placeholder.
-		</t>
-	</section>
-
+            An Object Dependency Graph (ODG) describes relationships between objects including dependencies and probable sequence of browsing 
+            through a web site. An instance of the cache map is typically created using an ODG as input to a process creating a cache map with 
+            a suitable depth. This description of this process is outside this document.
+        </t>
+    </section>
+		
     <section title="Appendix: DASH streaming Video OOB delivery">
         <t>
             Delivering streaming video content using a OOB cache is a possibility. Streaming video comes on two shapes: on-demand and live. In case of live video streaming delivery via an OOB server, the server is not best described as a "cache"- a deep network streaming server is a more appropriate description. However, how to delivery live streaming video content via an OOB server is out-of-scope of this version of this document. Instead, focus is on on-demand video which is described below.
