@@ -4,7 +4,7 @@
 <?rfc toc="yes" ?>
 <?rfc compact="yes" ?>
 <?rfc sortrefs="no" ?>
-<rfc ipr="trust200902" category="std" docName="draft-eriksson-oob-cache-00.txt" submissionType="IETF" xml:lang="en">
+<rfc ipr="trust200902" category="info" docName="draft-eriksson-oob-cache-00.txt" submissionType="IETF" xml:lang="en">
   <front>
     <title>
         Delivering content via Out-Of-Band Cache
@@ -37,22 +37,28 @@
     </author>
 
     <date year="2015" />
-    <area>Network Group</area>
+    <area>The Web and The Internet</area>
     <abstract>
         <t>
-            This document describes a framework for delivering protected HTTP payload from an origin to a client via an out-of-band cache (oob cache). It is NOT [yet] an IETF draft of a W3C contribution but rather a discussion document with information that MAY be relevant for both aforementioned fora or others with interest in the subject.
+            This document describes a framework for delivering protected HTTP payload from an origin to a client via an out-of-band cache (oob cache). It is NOT [yet] an IETF draft or a W3C contribution but rather a discussion document with information that MAY be relevant for both aforementioned fora or others with interest in the subject.
         </t>
         <t>
-            The framework adescribes how individual mechanisms, such as payload encryption [REF], out-of-band content delivery [REF], and content integrity [REF] could be leveraged.
+            The document describes a framework for how individual mechanisms, such as payload encryption [REF], out-of-band content delivery [REF], and content integrity [REF] could be leveraged.
         </t>
         <t>
             The framework assumes that the web administrator of the origin should be able to control how much content information is exposed to a deep network oob cache.
         </t>
         <t>
-        	An oob cache may be provided by a separate actor or belong to the same actor as the origin, a kind of distributed origin. However, if in the case of a distributed origin, there are reasons, depending for instance on whether the oob cache is provided by a third party, or the risk of a third party getting access to the information stored at the oob cache. One could debate whether the work oob cache is applicable in the distributed origin case but this is what this document does to keeps things simple this time around.
+        	An oob cache may be provided by a separate actor or belong to the same actor as the origin, a kind of distributed origin. However, if in the case of a distributed origin, there are reasons, depending for instance on whether the oob cache is provided by a third party, or the risk of a third party getting access to the information stored at the oob cache. One could debate whether the term 'oob cache' is applicable in the distributed origin case but this is what this document does to keeps things simple this time around.
         </t>
         <t>
             The oob cache might be reachable from the origin server, or it might be deployed behind a NAT. Both options are considered in the document, focus being on the case with the oob cache being visible for the origin.
+        </t>
+        <t>
+            Are there any benefits in leveraging deep network or customer premises caching? Example gains with caching (done right and with a shorter RTT than between client and origin server) are improved responsiveness, lower load on the origin, potentially lower peering cost for the ISP and possibly benfits from a closer interaction with mobile radio network.
+        </t>
+        <t>
+            Are the benefits significant enough to motivate the added complexity and potentially decreased end-user security and privacy? That is what needs to be looked at, which is one reason for this document.
         </t>
     </abstract>
 </front>
@@ -60,8 +66,7 @@
 <middle>
     <section title="Introduction">
         <t>
-            When content providers provide services to user, they need to consider user security and privacy. As the Internet traffic is transitioning towards TLS [ref],
-            content that could previously be cached in inline caches will need to be processed by the origin servers of the content providers.
+            When content providers provide services to user, they need to consider user security and privacy. As the Internet traffic is transitioning towards TLS [ref], content that could previously be cached in inline caches will need to be processed by the origin servers of the content providers.
         </t>
         <t>
             However, for cost and/or delivery time efficiency, there are situations where it still makes sense for a content provider to deliver resources from the origin via a cache, from where clients will fetch the resources. Delivering 
@@ -101,14 +106,14 @@
     <section title="Principles and Concepts" anchor="sec-prin-conc">
         <section title="General">
             <t>
-                When an origin server administrator decides to deliver resources via an oob cache,
-                the resource information exposed to the oob cache should be minimized, especially
+                When an origin server administrator decides to deliver resources via an oob cache, the client must be able to verify that the delivered resource is the one requested from the origin and that is has not been tampered with.
+                The resource information exposed should be minimized, even to the oob cache, and especially
                 if the oob cache is owned by a 3rd party or on a 3rd part cloud infrastructure.
-                Mechanisms that can be used for this purpose are e.g. HTTP payload encryption [ref], content integrity protection [ref].
+                Mechanisms that can be used for this purpose are e.g. HTML Sub Resource Integrity, HTTP payload integrity protection [ref] and OOB [ref].
             </t>
             <t>
-                The origin server decision which resources are delivered to a client via an oob cache might e.g. be done
-                based on static configuration, or dynamically based on information from an analytics tool.
+                The decision by the origin server which resources are delivered to a client via an oob cache might e.g. be done
+                based on static configuration, or dynamically based on information from an analytics tool. In addition to performance and cost aspects, end user security and privacy should always be taken into consideration when deciding what and how to to deliver oob, in this case via a cache.
                 [ref] describes the Object Dependency Graph, an information model of how a web sites objects are consumed by a user. This can used to decide opportunistically what to make available in a client or a cache before an explicit request for the object(s) has been made by the client.
             </t>
             <t>
@@ -122,8 +127,8 @@
                 between the entities is secured using TLS or a corresponding secure transport.
             </t>
             <t>
-                The architecture also assumes that the resources delivered out-of-band via the oob cache from the origin server to the client are protected using an HTTP content encryption/protection scheme. Information associated with the resources and needed to decrypt them is delivered
-                to the client on the secure client-origin connection.
+                The architecture also assumes that the resources delivered out-of-band via the oob cache from the origin server to the client are protected using an HTTP content protection scheme providing integrity protection and encryption. Information associated with the resources and needed to decrypt and verify integrity of them are delivered
+                to the client on the secure client-origin HTTPS connection.
             </t>
             <figure>
                 <artwork align="left" alt="" height="" name="" type="" width="" xml:space="preserve"><![CDATA[
@@ -135,7 +140,7 @@
     +---------+            +----------+
            \                  /
             \                /
-             \  HTTP(S)     /
+             \  HTTPS       /
               \            /  HTTPS
                \          /
                 \        /
@@ -151,23 +156,22 @@
         <section title="OOB Cache Discovery">
             <t>
                 A client can use different mechanisms in order to discover the presence of available local oob caches. The
-                discovery mechanism MUST be secure in the sense that the client is assumed to assert the identity of the
-                oob cache.
+                discovery mechanism MUST be secure in the sense that the client is assumed to assert the identity of the oob cache. If the client decided to use a discovered cache, it includes the identity of the oob cache when requesting resources from the origin.
             </t>
             <t>
-                TODO: look into mDNS based based discovery.
-            </t>
-            <t>
-                NOTE: This document assumes that the client performs the oob cache discovery. Origin discovery of oob caches is outside the scope.
+                NOTE: This document assumes that the client performs the oob cache discovery. Origin discovery of oob caches is outside the scope of this document.
             </t>
         </section>
         <section title="Cache Map">
             <t>
-                When the origin server places an object on an oob cache it will create a map between
-                the origin object URL and the cached object URL. An out-of-bands response to the
-                user agent can contain all or a subset of the maps stored by the origin server. The
+                When the origin server places an object on an oob cache it will create a map of the relation between
+                the origin object URL and the cached object URL. An out-of-band response to the
+                user agent can contain all or a subset of the map(s) stored by the origin server. The
                 list of maps also contain meta data about each item, e.g. content-type and
                 encryption information.
+            </t>
+            <t>
+                The 'SRI identity' parameter is a SHA-256 hash over the content. The hash is calculated as in W3C SRI [ref]. 'keyId' is an identifier for a symmetric key known by the client and the origin using e.g. Diffie-Hellman. The 'salt' parameter decides how to generate the content encryption key from they keying material identified by the keyID.
             </t>
             <figure>
                 <artwork align="left" alt="" height="" name="" type="" width="" xml:space="preserve"><![CDATA[
@@ -178,8 +182,9 @@
 | example.com/ex_jsl.js  | cache.ex1.com/lxUrP/75991 | 'content-type'  |
 |                        |                           | 'oob-control'   |
 |                        |                           | 'max-age'       |
-|                        |                           | 'encryption-key'|
-|                        |                           | 'content-hash'  |
+|                        |                           | 'SRI integrity' |
+|                        |                           | 'keyID'         |
+|                        |                           | 'salt'          |
 | -----------------------|---------------------------|-----------------|
 | example.com/style.css  | cache.ex1.com/lxUrP/74113 | 'content-type'  |
 |                        |                           |       ...       |
@@ -247,12 +252,20 @@
                     </list>
                 </t>
             </section>
-            <section title="Object integrity compromised">
+            <section title="Content integrity failure">
                 <t>
                     This case starts with the client detecting that the integrity of the object retrieved from an oob cache has been compromised.
                 </t>
                 <t>
-                    TBD.
+                    The following steps take place:
+                    <list style="symbols">
+                        <t>
+                            The client reports the integrity check failure to the origin server using the Link header and an appropriate error code along with information about the error (TODO: Error code integrity check failure and appropriate information to the Origin Server such as BC identity and resource identity).
+                        </t>
+                        <t>
+                            The client MAY keep count on number of content integrity check failures and after a certain number decide to stop using the OOB cache. Such a decision SHOULD be reported to the Origin Server.
+                        </t>
+                    </list>
                 </t>
             </section>
         </section>
@@ -260,20 +273,19 @@
             <section title="Registration">
                 <t>
                     In this case the client has informed the origin server about the presence of an oob cache in a suitable network location along with willingness to accept OOB,
-                    and the origin server decides to deliver resources to the client via the oob cache. The following procedure describes
-                    how the origin server registers itself with the oob cache, and exchanges the necessary information needed for the out-of-band
+                    and the origin server decides to deliver resources to the client via the oob cache. The following procedure describes how the origin server registers itself with the oob cache, and exchanges the necessary information needed for the out-of-band
                     delivery of the resources.
                 </t>
                 <t>
                     The following steps take place:
                     <list style="symbols">
-                        <t>The origin server establishes a secure TLS connection with the oob cache, using the location information of the oob cache received from the client.</t>
+                        <t>The origin server establishes a secure TLS connection (following the TLS profile in RFC7540 and W3C Secure Context if a Web browser based client) with the oob cache, using the location information of the oob cache received from the client. The connection should be mutually authenticated using e.g. erver and client certificates.</t>
                         <t>The origin server sends a register request (using a origin-cache protocol) to the oob cache.</t>
                         <t>The oob cache accepts the registration, and sends a response which contains available storage quota.</t>
                     </list>
                 </t>
                 <t>
-                    TBD: The origin should be authenticated by the oob cache. The mechanism for this is TBD. How to assert a 'secure' TLS connection is TBD.
+                    The origin should be authenticated by the oob cache. The mechanism for this is TBD but could for instance the registration procedure from ACME, including generation of credentials, could be used.
                 </t>
             </section>
             <section title="Pushing Resource on OOB Cache">
@@ -323,7 +335,8 @@
                             replace the content previously stored.</t>
                         <t>
                             The oob cache sends a response, and indicates that the old resource content has successfully been replaced with the
-                            new resource content.</t>
+                            new resource content.
+                        </t>
                     </list>
                 </t>
                 <t>
@@ -412,28 +425,78 @@
                     The following steps take place:
                     <list style="symbols">
                         <t>The client sends a request to the oob cache in order to retrieve a resource.</t>
-                        <t>The oob cache sends a response, which contains the requested resource.</t>
-                        <t>The client combines the response from the oob cache with content information from the origin server to create a response as if it came from the origin server.</t>
+                        <t>The oob cache sends a response which contains the requested resource.</t>
+                        <t> The client verifies the integrity of the content and decrypts the payload.
+                        </t>
+                        <t>The client combines the response from the oob cache with content meta data information from the origin server received in the cache map to create a response as if it came from the origin server.</t>
 
                     </list>
                 </t>
             </section>
-            <section title="OOB Cache Not Reachable">
-                <t>
-                    In this case the client is, based on information in the cache map, trying to retrieve a resource from the oob cache,
-                    but either receives a response (e.g. 404 Not Found) indicating that the oob cache cannot be reached, or receives
-                    a response indicating that the resource is not available on the oob cache.
+            <section title="Problem indications">
+                <section title="General">
+                    <t>
+                        In order to inform the origin about problems related to retrieving resources from the OOB Cache, the client uses the Link Header field [RFC5998], using the procedures and values defined in [draft-reschke- http-oob-encoding].
+                    </t>
+                </section>
+                <section title="OOB cache not reachable">
+                <t> 
+                    In this case the client is not able to contact the OOB Cache.  The case is identical to the 'Server Not Reachable' use-case defined in section 3.3.1 of [draft-reschke-http-oob-encoding].
                 </t>
                 <t>
-                    The following steps take place:
-                    <list style="symbols">
-                        <t>The client sends a request to the oob cache, in order to retrieve a resource.</t>
-                        <t>The client receives a response either indicating that the oob cache cannot be reached, or
-                        indicating that the resource is not available at the oob cache.</t>
-                        <t>The client interacts with the origin server, see [ref]</t>
-                    </list>
+                    Link relation:
+ 
+                    http://purl.org/NET/linkrel/not-reachable
+
+                    Example:
+ 
+                        GET /test HTTP/1.1
+                        Host: www.example.com
+                        Link: http://myoobcache.com/bae27c36-fa6a-11e4-ae5d-00059a3c7a00>;
+                            rel="http://purl.org/NET/linkrel/not-reachable"
                 </t>
-                <t>SOMEOTHERPLACE: The origin server may decide to deliver the resource directly to the client or refer again to a oob cache.</t>
+
+                <t>
+                    SOMEOTHERPLACE: The origin server may decide to deliver the resource directly to the client or refer again to a oob cache.
+                </t>
+                </section>
+                <section title="OOB cache resource not found">
+                    <t> 
+                        In this case the OOB Cache does not recognize the resource requested by the client.  The case is identical to the 'Resource Not Found' use-case defined in section 3.3.2 of [draft-reschke-http-oob-encoding].
+                    </t>
+                    <t>
+
+                        Link relation:
+ 
+                        http://purl.org/NET/linkrel/resource-not-found
+ 
+                        Example:
+ 
+                            GET /test HTTP/1.1
+                            Host: www.example.com
+                            Link: http://myoobcache.com/bae27c36-fa6a-11e4-ae5d-00059a3c7a00;
+                                rel="http://purl.org/NET/linkrel/resource-not-found"
+                    </t>
+                </section>
+                <section title="OOB resource unusable">
+                    <t>
+                        In this case the client is not able to process the resource retrieved from the OOB Cache.  The case is identical to the 'Payload Unusable' use-case defined in section 3.3.3 of [draft-reschke-http-oob-encoding].
+                    </t>
+                        <t> 
+                            Link relation:
+                        </t>
+                        <t>
+                            http://purl.org/NET/linkrel/payload-unusable
+                        </t>
+                        <t>
+                            Example:
+ 
+                            GET /test HTTP/1.1
+                            Host: www.example.com
+                            Link: http://myoobcache.com/bae27c36-fa6a-11e4-ae5d-00059a3c7a00;
+                                rel="http://purl.org/NET/linkrel/payload-unusable"
+                        </t>
+                </section>
             </section>
         </section>
     </section>
@@ -441,7 +504,7 @@
     <section title="Controlling the client oob and cache">
         <section title="OOB Redirection Control">
             <t>
-                NOT READY
+                NOT READY.
             </t>
             <t>
                 The client cache will contain two entries: one for the response from the origin and one for
@@ -466,7 +529,10 @@
             </t>
             <t>
                 The client MUST treat a resource, marked with the private directive, as private. This means
-                that the client MUST only provide the resource to the browsing context authenticated with the origin server.
+                that the client MUST only provide the resource to the secure browsing context authenticated with the origin server.
+            </t>
+            <t>
+                Private caches shall use an individually negotiated encryption key. The key may for example be generated using the key agreement mechanism specified in Web Push [ref].
             </t>
         </section>
         <section title="Cache Response Client Cache Control">
@@ -494,6 +560,8 @@
             <list style="symbols">
                 <t> The oob cache resource identity SHOULD be a pseudo-random string</t>
                 <t> The origin server SHOULD use random padding of content delivered oob.</t>
+                <t> The client MUST use TLS to the oob cache.</t>
+                <t> The connection(s) between oob cache and origin MUST be secured, e.g. using TLS.</t>
             </list>
         </t>
         </section>
@@ -506,6 +574,28 @@
             </t>
             <t> If the cache is shared between several clients, the cache can see that the users downloaded the same file.
             </t>
+            <t>
+                Compared to e2e HTTPS, the out-of-band approach has a different trust model where the oob cache in general is assumed to have lower trust than the origin and where the origin and the oob cache may not have any service layer agreements. The trust model differs between deployment models, and the client, the origin, both, or none may trust the oob cache. In some cases the origin may own and operate the oob cache and in other cases the client (or the enterprise owning the client) may own and operate the oob cache.
+            </t>
+            <t>
+                A main requirement for oob delivery is e2e data integrity between the origin and the client. The client shall be able to verify that the information corresponds to the requested resource and that the information has not been modified by the oob cache or any other party. Messages Authentication Codes be used to achieve this if the symmetric keys used for integrity protection is only given to a single client (a private cache). If group keys are used, source authentication is lost and a client cannot validate whether the origin or another client has created the content. Source authentication in  a group setting can be accomplished in several ways. The simplest option is to do like W3C subresource integrity where the origin delivers a SHA-256 hash of the resource over HTTPS. With the hash, the client can validate that the information from the oob cache corresponds to the requested resource and that the information has not been modified. Another option is to use a signature calculated with the origins private key [REF]. This has the advantage that also the signature can be sent oob, but the signature would need to include some unique identifier to bind the oob response to the requested resource.
+            </t>
+
+            <t>
+                Against external parties (i.e. not the oob cache provider), oob delivery over HTTPS provides integrity protection, confidentiality and in many cases better privacy. Against the oob cache provider, oob delivery provides e2e integrity protection of the content, but in many cases less confidentiality and privacy. For public content, oob delivery only provides confidentiality against passive caches as the cache can act as a client and request the encryption key from the origin.
+            </t>
+            <t>
+                Against malicious and active caches, confidentiality is only provided if the origin uses individual encryption keys for each user, or if access to encryption key is only given to a closed user group.
+
+                As the oob cache may not be trusted and may be compromised, the information given to the oob cache and external parties should be restricted to an absolute minimum. Several malicious oob caches may cooperate with each other and to correlation on meta data. The connection from the client to the oob cache SHOULD be encrypted. The metadata given to the oob cache (cache URL, encrypted content, content length) should be minimized and consist of pseudo-random strings to make any correlation difficult. Random padding SHOULD be used to hide the content length. It is RECOMMENDED that the information given to the oob cache is periodically updated to limit the possibility to do correlation on aggregated metadata. This can be achieved by reencrypting the content with a new encryption key and padding, and assign a new cache URL. 
+            </t>
+            <t>
+                Compared to HTML Sub-Resource Integrity, HTTP oob delivery can give better confidentiality and privacy. It is also more flexible and general as it operates on the HTTP level instead of HTML. Compared to e2e HTTPS, oob delivery may give worse confidentiality. The privacy properties are different depending on who the attacker is. 
+            </t>
+            <t>
+            As the confidentiality and privacy protection against maliscious or compromised oob caches may be worse that for e2e HTTPS, the origin should have different policies for different types of content. Content may not be delivered oob, or only delivered oob when the origin owns and operates the oob cache. The origin may also use different key management policies depending on if the information is sensitive or not. Sensitive content may for example only be delivered with individual encryption keys.  
+
+            </t>
         </section>
     </section>
 
@@ -515,11 +605,111 @@
         </t>
     </section>
 
-    <section title="Contributions and Acknowledgements">
+    <section title="Contributions">
         <t>
-            First and foremost Martin Thomson of Mozilla, the origin of the BC idea, MUST be acknowledged. Julian Reschke for the OOB Delivery draft. John Mattsson, Daniel Lindström, Magnus Westerlund, Stefan Håkansson and Marcus Ihlar made several significat contributions. Stefan Eissing and Julian Reschke also provided valuable feedback on this document and helped in synchronizing with the OOB Delivery draft and also suggested valuable enhancements for how to provide cache-maps.
-        </t>
+             Daniel Lindström, Zahedussaman Sarker, Marcus Ihlar, Hector Anadon, John Mattsonn, Magnus Westerlund and Marcus Ihlar made several significat contributions. Stefan Eissing and Julian Reschke also provided valuable input this document and helped in synchronizing with the OOB Delivery draft and also suggested really good enhancements for how to provide cache-maps.
+        </t> 
     </section>
+      <section title="Acknowledgements">
+        <t>
+            First and foremost Martin Thomson from Mozilla, the origin of the BC idea, MUST be acknowledged. Julian Reschke also for the OOB Delivery draft. Stefan Håkansson provided valuable comments.
+        </t>
+      </section>
+      <section title="Appendix: More on Privacy Considerations">
+        <t>
+            This section discusses the privacy properties that are possible to achieve for out-of-band cache. The privacy that is considered is for the user. This privacy are evaluated both against different types of third parties as well as in relation to the one operating the OOB cache. </t>
+
+      <section title="Third Parties">
+        <t>
+            Third parties are any entity beyond the user and his user equipment (UE), the origin and the OOB cache. The threat from this third party is that it can breach the users privacy and figure out sensitive information about the users, and its usage of services the origin provides. Any third party that can determine which transport connections that exist between the UE and the origin, will be able to determine some basic usage relation. The most basic is that the user access at least one out of the one or more sites that are hosted by the server at the specific transport flow address. If the third party can capture information about the IP packet that flows between the UE and origin then it may be possible to determine what content objects that are being sent back and forth. 
+        </t>
+
+        <t>
+            If this retrieval is done using no confidentiality protection, then the actual content object as well as resource identifiers could be accessed by third parties. In the below it is assumed that any UE to origin is at least confidentiality protected. This leaves an third party attacker to attempt to infer which objects are retrieved based on packet sequences and transport connections. This may enable the attacker to determine object sizes, which can be correlated with content resources available from the origin. If the attacker can traverse the origin and itself build a map of the different content resournces then it is likely that the attacker can determine which information the user has consumed. </t>
+
+        <t>
+            Thus, to preserve the users privacy methods that prevents a third party attacker to infer which content resoures that has been retrieved is recommended. Padding out objects to some fewer possible lengths as well as aggregating the transmission of multiple objects on the same transport could help obfuscating the resources.</t>
+
+        <t>
+            If the origin places some objects in the OOB cache, this changes the communication pattern between the UE and the origin, when some subset of objects are retrieved from the OOB cache instead. This also results in that additional objects, namely the cache map will need to be retrieved from the origin. It needs to be noted that the cache map is highly sensitive. For public web sites, different parts of the site, may produce cache map sizes that are destinct. Thus the cache map size should be obfuscated to reduce the risk for inferring which part of a site is being viewed by the user. </t>
+
+        <t>
+            A third party that is able to capture the traffic flows between the UE and the origin as well as UE and the OOB cache will basically have the same information as if all information was retrieved directly from the origin. This can even true even if no confidentiality protection is being used between the UE and OOB cache, assuming that the content object is confidentiality protected as well length obfuscated. However, as not confidentiality protecting the request and responses will reveal in clear text the obfuscated URI, it will simplify for an attacker to determine when different UEs retrieve the same resource. Therefore confidentiality protecting all of the HTTP messages are recommended.</t>
+
+        <t>
+            The OOB cache placement in relation to the attacker may simplify for the attacker to determine that a particular resource are retrieved by multiple UEs, compared to if the resource was retrieved from the origin. However, if the resources are not specific to a particular user and UE, or at least obfuscated differently for each retrieval, this type of inferment will be possible independetly from where the resources are retrieved. </t>
+
+        <t>
+            An OOB cache can improve the users privacy, in two ways. First due to its function as a cache. If the third party attacker is no able to capture the traffic flow between the UE and the OOB cache, only between the UE and the origin and the OOB cache and the origin. In that case the attacker can determine that the UE is communicating with the origin, or at least the server hosting the origin, and potentially other origins. If the content resource was in place prior to the attackers monitoring of the origin to OOB traffic, the attacker lacks knowledge about that content resource and can't determine at all that it is being retrieved. For resources that are put in place in the OOB by the origin, the attacker may be able to associate this action to a particular UEs actions. However, for subsequent UEs requesting the same resource there are no corresponding transmission event of the resource, assuming the origin reuses the resource. </t>
+
+        <t>
+            The second case when the privacy can be improved is when multiple users utilize the same OOB cache for the same origin. In this case the attacker might be unable to correctly associate a UE request for a resource with the origin's actions to put content into the OOB cache.</t>
+
+        <t>
+            To conclude in relation to third party attackers, the privacy protecting properties are very similar to directly retrieving resources from the origin. The same tools that improve user privacy between and origin and the UE should also be applied on the other paths. In some specific cases, the OOB cache will help hide a particular user's usage patterns. </t>
+      </section>
+
+      <section title="The OOB cache">
+        <t>
+            Here we consider an attacker that is the one operating the OOB cache and thus have access to all information provided to the OOB cache. </t>
+
+        <t>As the attacker is the termination point for the transport security
+        from both the UE and the origin, it has full access to resource
+        identifiers in any request. Thus, it has a clear picture of which UEs
+        that request a particular resource. Although the resource idenfiers
+        are obfuscated by the origin, what possible information one can
+        determine by analyzing commonality and differences in what is
+        retrieved by different UEs are possible to do with a passive attack.
+        The origin can prevent the OOB from being able to get the above
+        information. However this is at a significant price. The origin will
+        need to put a new copy of the content resource in the OOB cache for
+        each new request for a resource from the UE. These resources also
+        needs different content protections and length obfuscation so that the
+        object themselves can't be matched in the OOB cache. This removes any
+        bandwidth savings for the origin which the cache could provide. </t>
+
+        <t>As the OOB cache has access to what ever is being put in the cache
+        by the origin, the resource objects needs to be both confidentiality
+        protected as well as length obfuscated. However, for origins where the
+        attacker can request resources and travers all or parts of the site
+        and that way get a cache map from the origin, it will both get the
+        resource identifiers as well as the content protection keys, thus
+        providing it with the content resources in clear text. For an content
+        on the resources that is public, we have found no method of preventing
+        this attack, short of putting per UE unique content resources in the
+        cache. For origins with resources that have closed user groups, this
+        attack can be mitigated and restricted to the users within the group.
+        </t>
+
+        <t>In summary, if the OOB cache attacks the user's privacy it can
+        access significantly more information than a third party. For
+        web-sites with closed user groups and where the cached resources are
+        confidentiality protected including length obfuscation, it is very
+        difficult for the cache to infer what the content resources are.
+        However, it will be able to determine usage patterns and relation
+        between different UEs. Unfortunately, for content resources that are
+        not restriceted for the attacker when attempting to retrieve them from
+        the origin, the attacker can retrieve the cache map and determine the
+        clear text of the cached objects. For an attacker controlling the OOB
+        cache the improvement is small, compared to an cache have the content
+        resource in clear, moving from a passive attack to an active attack on
+        the users privacy. This, is assuming the origin don't see benefit with
+        the cache even when required to put per user specific resources into
+        the cache.</t>
+      </section>
+
+      </section>
+      <section title="Appendix: Enhancement- Cache Map as a Web resource">
+        <t>
+            The cache map can be treated as a Web resource. This has several promising advantages such as having dedicated server managing the cache-map life cycle including interaction with the client. The following text outlines such a realization.
+        </t>
+        <t>
+            When the cache map is a web resource, it is downloaded by the client from the origin like any other resource associated with a web page. The URL of the cache map is provided by the origin to the client in an HTTP header field, for instance the LINK header.
+        </t>
+        <t>
+            The origin can provide a new map URL in any subsequent HTTP response sent to the client.  The origin MUST modify the URL associated with the map if the map content has changed.
+        </t>
+      </section>
     <section title="Appendix: Cache deloyed behind a NAT">
 		<t>
 			In some deployments, the cache can be deloyed behind a NAT and therefore not reachable by the origin server. In this case, the oob cache need to connect to the origin server to allow for an exchange of messages used to configure the cache.
@@ -527,13 +717,13 @@
             An example of such situations are oob caches inside a private network, like an Enterprise network.
 
 			At least two issues can be identified:
- 				<t>
-                    <list style="symbols">
-                        <t>How make the oob cache connect to the origin server?</t>
-                        <t>How should the origin- cache procedures be realized when the cache is a HTTP client and the origin server is a HTTP server?</t>
-                    </list>
-                </t>
-		</t>
+        </t>
+ 		<t>
+            <list style="symbols">
+                <t>How make the oob cache connect to the origin server?</t>
+                <t>How should the origin- cache procedures be realized when the cache is a HTTP client and the origin server is a HTTP server?</t>
+             </list>
+        </t>
             <figure>
                 <artwork align="left" alt="" height="" name="" type="" width="" xml:space="preserve"><![CDATA[
 
@@ -549,7 +739,7 @@
                \                +-------+ /    
                 \               |  NAT  |/
                +----------+    /+-------+
-               |    OOB   |  /
+               |    OOB   |  / HTTPS
                |   Cache  |/
                |          |
                +----------+
@@ -561,7 +751,7 @@
                 One FW/NAT behaviour could be to only allow outgoing connections meaning neither the client nor the cache is visible/reachable for the Origin server.
             </t>
             <t>
-                In analyzing this deployment case, identifying and selecting which NAT/FW behaviours to design for would seem desirable.
+                In analyzing this deployment case, identifying and selecting which NAT/FW behaviours to design for seem desirable.
             </t>
 
             <figure>
@@ -599,12 +789,43 @@
 		<t>
 			The blind cache functionality can be implemented in the HTTP stack and not visible for the Web application. An alternative approach is to leverage the Service Worker mechanism [REF]. When the Service Worker is used, the BC client logic is implented in the JavaScript run inte SW. This also means that since the oob cache is of another origin that the origin server (sorry for the confusion), CORS and CSP need to be used. 
 		</t>
-	</section>
+        <t>
+            The Service Worker [REF] browser capability is by some described as an "on-board scriptable proxy". For those not familiar with it, go code and read. Possibly the most important stuff ongoing in browser networking right now even compared to Google Mobile Throughput Guidance API, QUIC, client hints, server timing, multi-path, secure origin, etc.
+        </t>
+        <t>
+            The realization is quite straight forward. The Service Worker Blind Cache- JSL is loaded from the origin server (in the future from a foreign origin). The BC-JSL intercepts requests from the Web page and performs the client OOB procedures outlined above. 
+        </t>
+        <t>
+            Unfortunately, there seem to be some pieces missing in current realisations of the Service Worker, please see issues for this draft on Git Hub.
+        </t>
+    </section>
+
 	<section title="Appendix: Cache-map as a Web resource">
 		<t>
 			Placeholder.
 		</t>
 	</section>
+
+    <section title="Appendix: DASH streaming Video OOB delivery">
+        <t>
+            Delivering streaming video content using a OOB cache is a possibility. Streaming video comes on two shapes: on-demand and live. In case of live video streaming delivery via an OOB server, the server is not best described as a "cache"- a deep network streaming server is a more appropriate description. However, how to delivery live streaming video content via an OOB server is out-of-scope of this version of this document. Instead, focus is on on-demand video which is described below.
+        </t>
+        <t>
+            Simply spreaking, MPEG DASH standard uses a MP4 container for the video segments and a manifest file with meta data about the video content. One example is that the manifest file describes which representations that are available of the video and a template for segment URL's, both of which are used by the client when retrieving content.
+        </t>
+        <t>
+            In one realization, the origin server serves the client with the manifest directly over the TLS connection while the video segments are delivered via the oob cache. In another realization, also the manifest is served by the oob cache.
+        </t>
+        <t>
+            Delivering streaming video over TLS is a concern for many content providers since it increases request-response time and cost (TLS cost, either in own processing and bandwidth or as prize of CDN service). Therefore, there have been questions whether clear text HTTP could be used. In a browser context that would mean that a so-called MIXed situation is at hand [REF]; the web application is from a secured origin but some resources may be delivered via clear text HTTP with the response not exposed to JS in a way that may mean security risks. The current situation is such that this is not allowed for active content including XHR, nor does it seem on the way to become possible. If this is deemed desirable from a content provider perspective, then this would need to be discussed more with W3C WebAppSec community. However, in light of the possible security risks, it would seem as if HTTPS should be required also for streaming video, live as well as on-demand.
+        </t>
+    </section>
+    <section title="Why Out-Of-Band Caching">
+        <t>
+            TBD. Placeholder for more discussion and information related to potential benefits of caching.
+        </t>
+
+    </section>
 
     <section title="Change Log">
         <t>[RFC EDITOR NOTE: Please remove this section when publishing]</t>
